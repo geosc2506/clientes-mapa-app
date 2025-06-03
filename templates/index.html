@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mapa de Clientes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 80vh; width: 100%; }
+    #info { padding: 10px; background: #f9f9f9; }
+    #controles {
+      margin: 10px;
+    }
+    select, button {
+      margin-right: 10px;
+    }
+    li { margin-bottom: 10px; list-style: none; }
+    .card {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff;
+      box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    .detalles {
+      display: none;
+      margin-top: 8px;
+    }
+    button {
+      padding: 4px 8px;
+      font-size: 0.9em;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>Mapa de Clientes (Lima, Perú)</h2>
+
+  <div id="controles">
+    <label><strong>Buscar dentro de:</strong></label>
+    <select id="radioSelector">
+      <option value="0.2">200 m</option>
+      <option value="0.3">300 m</option>
+      <option value="0.5" selected>500 m</option>
+      <option value="1">1 km</option>
+      <option value="2">2 km</option>
+    </select>
+
+    <button onclick="limpiarTodo()">🧹 Limpiar mapa</button>
+  </div>
+
+  <div id="map"></div>
+
+  <div id="info">
+    <h3>Clientes cercanos:</h3>
+    <ul id="clientes-list"></ul>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+  <script>
+    const map = L.map('map').setView([-12.0464, -77.0428], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let clientes = [];
+    let marcadores = [];
+    let circulo = null;
+
+    function parseCSV(text) {
+      const lines = text.split('\n').filter(l => l.trim() !== '');
+      const headers = lines[0].split(',').map(h => h.trim());
+      return lines.slice(1).map(line => {
+        const data = line.split(',');
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = data[i]?.trim());
+        return obj;
+      });
+    }
+
+    async function cargarClientes() {
+      const url = 'https://docs.google.com/spreadsheets/d/1YCEuaC-E-pSPsT-VnitCDBT5cc5k_qh3_2wxtbTuCOs/export?format=csv&gid=0';
+      const res = await fetch(url);
+      const text = await res.text();
+      clientes = parseCSV(text);
+    }
+
+    function limpiarMarcadores() {
+      marcadores.forEach(m => map.removeLayer(m));
+      marcadores = [];
+    }
+
+    function limpiarTodo() {
+      limpiarMarcadores();
+      document.getElementById('clientes-list').innerHTML = '';
+      if (circulo) {
+        map.removeLayer(circulo);
+        circulo = null;
+      }
+    }
+
+    function mostrarClientesCercanos(punto) {
+      const radio = parseFloat(document.getElementById('radioSelector').value);
+      const lista = document.getElementById('clientes-list');
+      lista.innerHTML = '';
+      limpiarMarcadores();
+
+      if (circulo) map.removeLayer(circulo);
+      circulo = L.circle([punto[1], punto[0]], {
+        radius: radio * 1000,
+        color: 'blue',
+        fillColor: '#3faaff',
+        fillOpacity: 0.15
+      }).addTo(map);
+
+      let encontrados = 0;
+
+      clientes.forEach((c, index) => {
+        if (!c.latitud || !c.longitud) return;
+
+        const distancia = turf.distance(punto, [parseFloat(c.longitud), parseFloat(c.latitud)], { units: 'kilometers' });
+
+        if (distancia <= radio) {
+          encontrados++;
+
+          const marcador = L.marker([+c.latitud, +c.longitud])
+            .addTo(map)
+            .bindPopup(`<strong>${c.nombre}</strong><br>${c.direccion || ''}`);
+          marcadores.push(marcador);
+
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <div class="card">
+              <strong style="font-size: 1.1em;">${c.nombre}</strong><br>
+              <small>Distancia: ${distancia.toFixed(2)} km</small><br>
+              <button onclick="toggleDetalles(${index})">Ver detalles</button>
+              <div class="detalles" id="detalles-${index}">
+                <p>📍 ${c.direccion || 'Sin dirección'}</p>
+                <p>📞 ${c.telefono || 'Sin teléfono'}</p>
+                <p>📝 ${c.notas || 'Sin notas'}</p>
+              </div>
+            </div>
+          `;
+          lista.appendChild(li);
+        }
+      });
+
+      if (encontrados === 0) {
+        lista.innerHTML = "<li>No hay clientes dentro de este radio.</li>";
+      }
+    }
+
+    function toggleDetalles(index) {
+      const detalles = document.getElementById(`detalles-${index}`);
+      detalles.style.display = detalles.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function detectarUbicacion() {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const coords = [pos.coords.longitude, pos.coords.latitude];
+
+          map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+
+          L.marker([pos.coords.latitude, pos.coords.longitude], {
+            icon: L.icon({
+              iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png",
+              iconSize: [25, 25],
+              iconAnchor: [12, 24],
+            })
+          }).addTo(map).bindPopup("📍 Tu ubicación").openPopup();
+
+          mostrarClientesCercanos(coords);
+        }, err => {
+          console.warn("⚠️ No se pudo obtener ubicación:", err.message);
+        });
+      } else {
+        alert("Este navegador no soporta geolocalización.");
+      }
+    }
+
+    map.on('click', function(e) {
+      const punto = [e.latlng.lng, e.latlng.lat];
+      mostrarClientesCercanos(punto);
+    });
+
+    cargarClientes().then(() => detectarUbicacion());
+  </script>
+</body>
+</html>
