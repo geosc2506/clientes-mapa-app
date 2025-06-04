@@ -45,7 +45,7 @@
   <div id="map"></div>
   <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
 
-  <!-- ✅ Carga directa de datos desde Flask -->
+  <!-- Carga directa de datos desde Flask -->
   <script>
     let clientes = {{ clientes | tojson | safe }};
     console.log("✅ Clientes cargados:", clientes);
@@ -72,14 +72,21 @@
     }
 
     function mostrarClientesCercanos(centro, radio) {
+      // 🧹 Eliminar marcadores anteriores
+      marcadoresClientes.forEach(m => map.removeLayer(m));
+      marcadoresClientes = [];
+
       let html = "<strong>Clientes cercanos:</strong>";
+
       clientes.forEach(c => {
         if (c.latitud && c.longitud && c.nombre) {
           const dist = map.distance(centro, [c.latitud, c.longitud]);
           if (dist <= radio) {
-            L.marker([c.latitud, c.longitud])
+            const marcador = L.marker([c.latitud, c.longitud])
               .addTo(map)
               .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}<br>${c.distrito || ''}<br>${c.telefono || ''}`);
+            marcadoresClientes.push(marcador);
+
             html += `
               <div class="cliente">
                 <h4>${c.nombre}</h4>
@@ -90,6 +97,7 @@
           }
         }
       });
+
       document.getElementById('lista-clientes').innerHTML = html;
     }
 
