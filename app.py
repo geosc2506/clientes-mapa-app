@@ -4,33 +4,34 @@ import requests
 from io import StringIO
 
 app = Flask(__name__)
-app.secret_key = 'secreto123'  # Cambiar en producción
+app.secret_key = 'secreto123'  # Reemplazar por una clave segura
 
-# Credenciales fijas
 USUARIO = 'geo'
 CLAVE = 'akira'
 
-# Función para leer datos desde Google Sheets
 def obtener_clientes():
     try:
         url = "https://docs.google.com/spreadsheets/d/1YCEuaC-E-pSPsT-VnitCDBT5cc5k_qh3_2wxtbTuCOs/export?format=csv"
         response = requests.get(url)
-        response.raise_for_status()
+        response.raise_for_status()  # Lanza error si no carga
 
         df = pd.read_csv(StringIO(response.text))
 
-        # Asegura columnas esperadas
         columnas = ['nombre', 'direccion', 'latitud', 'longitud', 'distrito', 'telefono']
         for col in columnas:
             if col not in df.columns:
                 df[col] = ''
 
-        return df.to_dict(orient='records')
+        # Asegura que lat y lng sean números
+        df['latitud'] = pd.to_numeric(df['latitud'], errors='coerce')
+        df['longitud'] = pd.to_numeric(df['longitud'], errors='coerce')
+
+        return df.dropna(subset=['latitud', 'longitud']).to_dict(orient='records')
+
     except Exception as e:
-        print("❌ Error al cargar clientes:", e)
+        print("❌ Error al obtener clientes:", e)
         return []
 
-# Rutas
 @app.route('/')
 def index():
     if 'usuario' in session:
@@ -40,13 +41,10 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        usuario = request.form['usuario']
-        clave = request.form['clave']
-        if usuario == USUARIO and clave == CLAVE:
-            session['usuario'] = usuario
+        if request.form['usuario'] == USUARIO and request.form['clave'] == CLAVE:
+            session['usuario'] = request.form['usuario']
             return redirect('/dashboard')
-        else:
-            return 'Credenciales incorrectas'
+        return 'Credenciales incorrectas'
     return render_template('login.html')
 
 @app.route('/dashboard')

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Mapa de Clientes (Lima, Perú)</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
@@ -17,7 +17,6 @@
     #lista-clientes {
       padding: 10px;
       border-top: 1px solid #ccc;
-      font-family: Arial, sans-serif;
     }
     .cliente {
       border: 1px solid #ddd;
@@ -25,20 +24,13 @@
       padding: 8px;
       border-radius: 5px;
     }
-    .cliente h4 { margin: 0; }
-    .cliente button {
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 3px;
-      cursor: pointer;
+    .cliente h4 {
+      margin: 0;
     }
   </style>
 </head>
 <body>
   <h2>Mapa de Clientes (Lima, Perú)</h2>
-
   <div id="filtros">
     <label for="rango">Buscar dentro de:</label>
     <select id="rango">
@@ -53,7 +45,7 @@
   <div id="map"></div>
   <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
 
-  <!-- Datos JSON seguros -->
+  <!-- Carga segura de clientes -->
   <script id="clientes-data" type="application/json">
     {{ clientes | tojson | safe }}
   </script>
@@ -63,11 +55,12 @@
     let clientes = [];
 
     try {
-      clientes = JSON.parse(document.getElementById("clientes-data").textContent);
-      console.log("✅ Clientes cargados:", clientes.length);
-    } catch (error) {
+      const rawData = document.getElementById("clientes-data").textContent;
+      clientes = JSON.parse(rawData);
+      console.log("✅ Clientes cargados:", clientes);
+    } catch (e) {
+      console.error("❌ Error al convertir clientes JSON:", e);
       alert("❌ Error al cargar los datos de clientes. Revisa consola.");
-      console.error(error);
     }
 
     const map = L.map('map').setView([-12.0464, -77.0428], 12);
@@ -89,42 +82,28 @@
     }
 
     function mostrarClientesCercanos(centro, radio) {
-      let listaHtml = "<strong>Clientes cercanos:</strong>";
+      let html = "<strong>Clientes cercanos:</strong>";
       clientes.forEach(c => {
         if (c.latitud && c.longitud && c.nombre) {
           const dist = map.distance(centro, [c.latitud, c.longitud]);
           if (dist <= radio) {
-            const popupContent = `
-              <b>${c.nombre}</b><br>
-              ${c.direccion || ''}<br>
-              ${c.distrito || ''}<br>
-              <i>${c.telefono || ''}</i>
-            `;
-            const marcador = L.marker([c.latitud, c.longitud])
-              .bindPopup(popupContent)
-              .addTo(map);
-            marcadoresClientes.push(marcador);
-
-            listaHtml += `
+            L.marker([c.latitud, c.longitud])
+              .addTo(map)
+              .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}<br>${c.distrito || ''}<br>${c.telefono || ''}`);
+            html += `
               <div class="cliente">
                 <h4>${c.nombre}</h4>
-                <p>
-                  <strong>Dirección:</strong> ${c.direccion || ''}<br>
-                  <strong>Distrito:</strong> ${c.distrito || ''}<br>
-                  <strong>Teléfono:</strong> ${c.telefono || 'No disponible'}<br>
-                  <strong>Distancia:</strong> ${(dist / 1000).toFixed(2)} km
-                </p>
-                <button onclick="alert('Aquí puedes mostrar más detalles')">Ver detalles</button>
+                <p>${c.direccion || ''}<br>${c.distrito || ''}<br>${c.telefono || ''}<br>
+                Distancia: ${(dist / 1000).toFixed(2)} km</p>
               </div>
             `;
           }
         }
       });
-
-      document.getElementById('lista-clientes').innerHTML = listaHtml;
+      document.getElementById('lista-clientes').innerHTML = html;
     }
 
-    map.on('click', function(e) {
+    map.on('click', function (e) {
       limpiar();
       const centro = [e.latlng.lat, e.latlng.lng];
       const rango = parseInt(document.getElementById('rango').value);
@@ -134,29 +113,29 @@
     });
 
     navigator.geolocation.getCurrentPosition(
-      position => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        const userLatLng = [lat, lng];
-        map.setView(userLatLng, 14);
+      pos => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
         const rango = parseInt(document.getElementById('rango').value);
-        marcadorUsuario = L.marker(userLatLng).addTo(map).bindPopup("Tú estás aquí").openPopup();
-        circulo = L.circle(userLatLng, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
-        mostrarClientesCercanos(userLatLng, rango);
+        const centro = [lat, lng];
+        map.setView(centro, 14);
+        marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
+        circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
+        mostrarClientesCercanos(centro, rango);
       },
-      error => {
-        alert("Ubicación no disponible. Puedes hacer clic en el mapa.");
-        map.setView([-12.0464, -77.0428], 12); // Centro en Lima
+      err => {
+        alert("No se pudo obtener tu ubicación. Haz clic en el mapa.");
+        console.warn("Geolocalización falló:", err);
       }
     );
 
-    document.getElementById('rango').addEventListener('change', () => {
-      if (!circulo || !marcadorUsuario) return;
+    document.getElementById("rango").addEventListener("change", () => {
+      if (!marcadorUsuario || !circulo) return;
       const centro = marcadorUsuario.getLatLng();
       limpiar();
       const rango = parseInt(document.getElementById('rango').value);
-      marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Punto seleccionado").openPopup();
-      circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
+      marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
+      circulo = L.circle([centro.lat, centro.lng], { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
       mostrarClientesCercanos([centro.lat, centro.lng], rango);
     });
   </script>
