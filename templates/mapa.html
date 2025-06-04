@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mapa de Clientes</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map {
+      height: 600px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h2>Clientes en el Mapa</h2>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Los datos se pasan desde Flask como JSON
+    const clientes = {{ clientes | tojson }};
+
+    // Centrar el mapa en el primer cliente (si existe)
+    const map = L.map('map').setView([clientes[0].latitud, clientes[0].longitud], 12);
+
+    // Cargar tiles de OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Agregar marcadores por cada cliente
+    clientes.forEach(c => {
+      if (c.latitud && c.longitud) {
+        L.marker([c.latitud, c.longitud]).addTo(map)
+          .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`);
+      }
+    });
+  </script>
+</body>
+</html>
