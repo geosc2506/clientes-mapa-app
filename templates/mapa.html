@@ -27,10 +27,25 @@
     .cliente h4 {
       margin: 0;
     }
+    .cerrar-sesion {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
+
+  <!-- 🔓 Botón clásico de cerrar sesión -->
+  <div class="cerrar-sesion">
+    <form action="/logout" method="get">
+      <button type="submit">Cerrar sesión</button>
+    </form>
+  </div>
+
   <h2>Mapa de Clientes (Lima, Perú)</h2>
+
   <div id="filtros">
     <label for="rango">Buscar dentro de:</label>
     <select id="rango">
@@ -45,7 +60,6 @@
   <div id="map"></div>
   <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
 
-  <!-- Carga directa de datos desde Flask -->
   <script>
     let clientes = {{ clientes | tojson | safe }};
     console.log("✅ Clientes cargados:", clientes);
@@ -72,7 +86,6 @@
     }
 
     function mostrarClientesCercanos(centro, radio) {
-      // 🧹 Eliminar marcadores anteriores
       marcadoresClientes.forEach(m => map.removeLayer(m));
       marcadoresClientes = [];
 
