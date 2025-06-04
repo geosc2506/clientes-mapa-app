@@ -67,19 +67,25 @@
       });
     }
 
+    // Al hacer clic en el mapa
+    map.on('click', function(e) {
+      limpiar();
+      const centro = [e.latlng.lat, e.latlng.lng];
+      const rango = parseInt(document.getElementById('rango').value);
+      marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Punto seleccionado").openPopup();
+      circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
+      mostrarClientesCercanos(centro, rango);
+    });
+
+    // También lo hace al detectar la ubicación del usuario
     navigator.geolocation.getCurrentPosition(
       position => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         const userLatLng = [lat, lng];
         map.setView(userLatLng, 14);
-
-        marcadorUsuario = L.marker(userLatLng)
-          .addTo(map)
-          .bindPopup("Tú estás aquí")
-          .openPopup();
-
         const rango = parseInt(document.getElementById('rango').value);
+        marcadorUsuario = L.marker(userLatLng).addTo(map).bindPopup("Tú estás aquí").openPopup();
         circulo = L.circle(userLatLng, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
         mostrarClientesCercanos(userLatLng, rango);
       },
@@ -88,17 +94,15 @@
       }
     );
 
+    // Si cambia el valor del selector de radio
     document.getElementById('rango').addEventListener('change', () => {
+      if (!circulo || !marcadorUsuario) return;
+      const centro = marcadorUsuario.getLatLng();
       limpiar();
-      navigator.geolocation.getCurrentPosition(pos => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        const rango = parseInt(document.getElementById('rango').value);
-        const centro = [lat, lng];
-        marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
-        circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
-        mostrarClientesCercanos(centro, rango);
-      });
+      const rango = parseInt(document.getElementById('rango').value);
+      marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Punto seleccionado").openPopup();
+      circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
+      mostrarClientesCercanos([centro.lat, centro.lng], rango);
     });
   </script>
 </body>
