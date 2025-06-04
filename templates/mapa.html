@@ -18,8 +18,14 @@
       padding: 8px;
       border-radius: 5px;
     }
-    .cliente h4 {
-      margin: 0;
+    .cliente h4 { margin: 0; }
+    .cliente button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 3px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -78,14 +84,16 @@
               .addTo(map);
             marcadoresClientes.push(marcador);
 
-            // Agregar al listado abajo del mapa
             listaHtml += `
               <div class="cliente">
                 <h4>${c.nombre}</h4>
-                <p><strong>Dirección:</strong> ${c.direccion}<br>
-                   <strong>Distrito:</strong> ${c.distrito}<br>
-                   <strong>Distancia:</strong> ${(dist / 1000).toFixed(2)} km</p>
-                <button>Ver detalles</button>
+                <p>
+                  <strong>Dirección:</strong> ${c.direccion}<br>
+                  <strong>Distrito:</strong> ${c.distrito}<br>
+                  <strong>Teléfono:</strong> ${c.telefono || 'No disponible'}<br>
+                  <strong>Distancia:</strong> ${(dist / 1000).toFixed(2)} km
+                </p>
+                <button onclick="alert('Aquí puedes mostrar más información detallada')">Ver detalles</button>
               </div>
             `;
           }
