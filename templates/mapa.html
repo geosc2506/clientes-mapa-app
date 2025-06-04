@@ -5,7 +5,12 @@
   <title>Mapa de Clientes (Lima, Perú)</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    #map { height: 600px; width: 100%; margin-bottom: 20px; }
+    #map {
+      height: 600px;
+      width: 100%;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+    }
     #filtros { margin: 10px 0; }
     #lista-clientes {
       padding: 10px;
@@ -35,7 +40,7 @@
   <div id="filtros">
     <label for="rango">Buscar dentro de:</label>
     <select id="rango">
-      <option value="500">500 m</option>
+      <option value="500">500 metros</option>
       <option value="1000">1 km</option>
       <option value="2000">2 km</option>
       <option value="5000">5 km</option>
@@ -46,14 +51,18 @@
   <div id="map"></div>
   <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
 
-  <!-- ✅ Datos JSON de forma segura -->
+  <!-- ✅ JSON seguro: protegido por raw -->
+  {% raw %}
   <script id="clientes-data" type="application/json">
-    {{ clientes | tojson }}
+  {{ clientes | tojson }}
   </script>
+  {% endraw %}
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
+    // Leer JSON seguro
     const clientes = JSON.parse(document.getElementById("clientes-data").textContent);
+    console.log("Clientes cargados:", clientes);
 
     const map = L.map('map').setView([-12.0464, -77.0428], 12);
 
