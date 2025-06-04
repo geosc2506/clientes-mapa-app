@@ -197,7 +197,26 @@
 
     document.getElementById("rango").addEventListener("change", actualizar);
     document.getElementById("estado").addEventListener("change", actualizar);
-    document.getElementById("distrito").addEventListener("change", actualizar);
+    document.getElementById("distrito").addEventListener("change", () => {
+      const distrito = document.getElementById("distrito").value;
+      if (marcadorUsuario && circulo) {
+        actualizar();  // si ya hay ubicación
+      } else if (distrito !== "todos") {
+        const clienteDistrito = clientes.find(c => c.distrito && c.distrito.toLowerCase() === distrito);
+        if (clienteDistrito) {
+          const lat = clienteDistrito.latitud;
+          const lng = clienteDistrito.longitud;
+          if (lat && lng) {
+            const centro = [lat, lng];
+            const rango = parseInt(document.getElementById("rango").value);
+            map.setView(centro, 14);
+            marcadorUsuario = L.marker(centro).addTo(map).bindPopup(`Distrito: ${clienteDistrito.distrito}`).openPopup();
+            circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
+            mostrarClientesCercanos(centro, rango);
+          }
+        }
+      }
+    });
   </script>
 </body>
 </html>
