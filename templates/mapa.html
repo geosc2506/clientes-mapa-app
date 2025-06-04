@@ -63,6 +63,11 @@
       <option value="inactivo">Inactivo</option>
     </select>
 
+    <label for="distrito">Distrito:</label>
+    <select id="distrito">
+      <option value="todos">Todos</option>
+    </select>
+
     <button onclick="limpiar()">🧹 Limpiar mapa</button>
   </div>
 
@@ -72,6 +77,16 @@
   <script>
     let clientes = {{ clientes | tojson | safe }};
     console.log("✅ Clientes cargados:", clientes);
+
+    // Cargar distritos únicos dinámicamente
+    const selectDistrito = document.getElementById("distrito");
+    const distritosUnicos = [...new Set(clientes.map(c => c.distrito).filter(Boolean).sort())];
+    distritosUnicos.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d.toLowerCase();
+      opt.textContent = d;
+      selectDistrito.appendChild(opt);
+    });
   </script>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -103,6 +118,8 @@
 
     function mostrarClientesCercanos(centro, radio) {
       const estadoFiltro = document.getElementById("estado").value.toLowerCase();
+      const distritoFiltro = document.getElementById("distrito").value.toLowerCase();
+
       marcadoresClientes.forEach(m => map.removeLayer(m));
       marcadoresClientes = [];
 
@@ -111,11 +128,13 @@
       clientes.forEach(c => {
         if (c.latitud && c.longitud && c.nombre) {
           const dist = map.distance(centro, [c.latitud, c.longitud]);
-
           const estado = (c.estado || '').toLowerCase();
-          const coincideEstado = (estadoFiltro === 'todos') || (estado === estadoFiltro);
+          const distrito = (c.distrito || '').toLowerCase();
 
-          if (dist <= radio && coincideEstado) {
+          const coincideEstado = (estadoFiltro === 'todos') || (estado === estadoFiltro);
+          const coincideDistrito = (distritoFiltro === 'todos') || (distrito === distritoFiltro);
+
+          if (dist <= radio && coincideEstado && coincideDistrito) {
             const prioridad = (c.prioridad || '').toLowerCase();
             const icono = iconos[prioridad] || iconos.default;
 
@@ -178,6 +197,7 @@
 
     document.getElementById("rango").addEventListener("change", actualizar);
     document.getElementById("estado").addEventListener("change", actualizar);
+    document.getElementById("distrito").addEventListener("change", actualizar);
   </script>
 </body>
 </html>
