@@ -52,8 +52,14 @@
         if (c.latitud && c.longitud) {
           const dist = map.distance(centro, [c.latitud, c.longitud]);
           if (dist <= radio) {
+            const popupContent = `
+              <b>${c.nombre}</b><br>
+              ${c.direccion}<br>
+              ${c.distrito}<br>
+              <i>${c.telefono || ''}</i>
+            `;
             const marcador = L.marker([c.latitud, c.longitud])
-              .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`)
+              .bindPopup(popupContent)
               .addTo(map);
             marcadoresClientes.push(marcador);
           }
@@ -61,7 +67,6 @@
       });
     }
 
-    // Ubicar al usuario
     navigator.geolocation.getCurrentPosition(
       position => {
         const lat = position.coords.latitude;
@@ -69,14 +74,13 @@
         const userLatLng = [lat, lng];
         map.setView(userLatLng, 14);
 
-        marcadorUsuario = L.marker(userLatLng, { color: 'blue' })
+        marcadorUsuario = L.marker(userLatLng)
           .addTo(map)
           .bindPopup("Tú estás aquí")
           .openPopup();
 
         const rango = parseInt(document.getElementById('rango').value);
         circulo = L.circle(userLatLng, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
-
         mostrarClientesCercanos(userLatLng, rango);
       },
       error => {
