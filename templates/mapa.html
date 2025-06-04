@@ -53,7 +53,7 @@
   <div id="map"></div>
   <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
 
-  <!-- Carga segura del JSON -->
+  <!-- Datos JSON seguros -->
   <script id="clientes-data" type="application/json">
     {{ clientes | tojson | safe }}
   </script>
@@ -61,11 +61,12 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     let clientes = [];
+
     try {
       clientes = JSON.parse(document.getElementById("clientes-data").textContent);
-      console.log("Clientes cargados:", clientes);
+      console.log("✅ Clientes cargados:", clientes.length);
     } catch (error) {
-      alert("Error al cargar los datos de clientes. Revisa consola.");
+      alert("❌ Error al cargar los datos de clientes. Revisa consola.");
       console.error(error);
     }
 
@@ -144,9 +145,8 @@
         mostrarClientesCercanos(userLatLng, rango);
       },
       error => {
-        console.warn("Ubicación no permitida o no disponible.");
-        alert("Ubicación no permitida. Puedes hacer clic en el mapa para buscar clientes cercanos.");
-        map.setView([-12.0464, -77.0428], 12); // Vista por defecto Lima
+        alert("Ubicación no disponible. Puedes hacer clic en el mapa.");
+        map.setView([-12.0464, -77.0428], 12); // Centro en Lima
       }
     );
 
