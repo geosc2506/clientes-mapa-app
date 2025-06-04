@@ -46,9 +46,13 @@
   <div id="map"></div>
   <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
 
+  <!-- Carga de Leaflet y clientes con seguridad -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    const clientes = {{ clientes | tojson }};
+    const clientes = JSON.parse(`{{ clientes | tojson | safe }}`);
+  </script>
+
+  <script>
     const map = L.map('map').setView([-12.0464, -77.0428], 12);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -84,14 +88,15 @@
               .addTo(map);
             marcadoresClientes.push(marcador);
 
-            // HTML de la lista con cliente
             listaHtml += `
               <div class="cliente">
                 <h4>${c.nombre}</h4>
-                <p><strong>Dirección:</strong> ${c.direccion || ''}<br>
-                <strong>Distrito:</strong> ${c.distrito || ''}<br>
-                <strong>Teléfono:</strong> ${c.telefono || 'No disponible'}<br>
-                <strong>Distancia:</strong> ${(dist / 1000).toFixed(2)} km</p>
+                <p>
+                  <strong>Dirección:</strong> ${c.direccion || ''}<br>
+                  <strong>Distrito:</strong> ${c.distrito || ''}<br>
+                  <strong>Teléfono:</strong> ${c.telefono || 'No disponible'}<br>
+                  <strong>Distancia:</strong> ${(dist / 1000).toFixed(2)} km
+                </p>
                 <button onclick="alert('Aquí puedes mostrar más detalles del cliente')">Ver detalles</button>
               </div>
             `;
@@ -99,7 +104,6 @@
         }
       });
 
-      // Actualizar el contenido del contenedor
       document.getElementById('lista-clientes').innerHTML = listaHtml;
     }
 
