@@ -5,9 +5,21 @@
   <title>Mapa de Clientes (Lima, Perú)</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    #map { height: 600px; width: 100%; }
-    #filtros {
-      margin: 10px 0;
+    #map { height: 600px; width: 100%; margin-bottom: 20px; }
+    #filtros { margin: 10px 0; }
+    #lista-clientes {
+      padding: 10px;
+      border-top: 1px solid #ccc;
+      font-family: Arial, sans-serif;
+    }
+    .cliente {
+      border: 1px solid #ddd;
+      margin-bottom: 10px;
+      padding: 8px;
+      border-radius: 5px;
+    }
+    .cliente h4 {
+      margin: 0;
     }
   </style>
 </head>
@@ -26,6 +38,7 @@
   </div>
 
   <div id="map"></div>
+  <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
@@ -45,9 +58,11 @@
       if (marcadorUsuario) map.removeLayer(marcadorUsuario);
       marcadoresClientes.forEach(m => map.removeLayer(m));
       marcadoresClientes = [];
+      document.getElementById('lista-clientes').innerHTML = "<strong>Clientes cercanos:</strong>";
     }
 
     function mostrarClientesCercanos(centro, radio) {
+      let listaHtml = "<strong>Clientes cercanos:</strong>";
       clientes.forEach(c => {
         if (c.latitud && c.longitud) {
           const dist = map.distance(centro, [c.latitud, c.longitud]);
@@ -62,12 +77,23 @@
               .bindPopup(popupContent)
               .addTo(map);
             marcadoresClientes.push(marcador);
+
+            // Agregar al listado abajo del mapa
+            listaHtml += `
+              <div class="cliente">
+                <h4>${c.nombre}</h4>
+                <p><strong>Dirección:</strong> ${c.direccion}<br>
+                   <strong>Distrito:</strong> ${c.distrito}<br>
+                   <strong>Distancia:</strong> ${(dist / 1000).toFixed(2)} km</p>
+                <button>Ver detalles</button>
+              </div>
+            `;
           }
         }
       });
+      document.getElementById('lista-clientes').innerHTML = listaHtml;
     }
 
-    // Al hacer clic en el mapa
     map.on('click', function(e) {
       limpiar();
       const centro = [e.latlng.lat, e.latlng.lng];
@@ -77,7 +103,6 @@
       mostrarClientesCercanos(centro, rango);
     });
 
-    // También lo hace al detectar la ubicación del usuario
     navigator.geolocation.getCurrentPosition(
       position => {
         const lat = position.coords.latitude;
@@ -94,7 +119,6 @@
       }
     );
 
-    // Si cambia el valor del selector de radio
     document.getElementById('rango').addEventListener('change', () => {
       if (!circulo || !marcadorUsuario) return;
       const centro = marcadorUsuario.getLatLng();
