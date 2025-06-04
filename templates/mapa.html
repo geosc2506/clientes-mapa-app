@@ -70,13 +70,13 @@
     function mostrarClientesCercanos(centro, radio) {
       let listaHtml = "<strong>Clientes cercanos:</strong>";
       clientes.forEach(c => {
-        if (c.latitud && c.longitud) {
+        if (c.latitud && c.longitud && c.nombre) {
           const dist = map.distance(centro, [c.latitud, c.longitud]);
           if (dist <= radio) {
             const popupContent = `
               <b>${c.nombre}</b><br>
-              ${c.direccion}<br>
-              ${c.distrito}<br>
+              ${c.direccion || ''}<br>
+              ${c.distrito || ''}<br>
               <i>${c.telefono || ''}</i>
             `;
             const marcador = L.marker([c.latitud, c.longitud])
@@ -84,21 +84,22 @@
               .addTo(map);
             marcadoresClientes.push(marcador);
 
+            // HTML de la lista con cliente
             listaHtml += `
               <div class="cliente">
                 <h4>${c.nombre}</h4>
-                <p>
-                  <strong>Dirección:</strong> ${c.direccion}<br>
-                  <strong>Distrito:</strong> ${c.distrito}<br>
-                  <strong>Teléfono:</strong> ${c.telefono || 'No disponible'}<br>
-                  <strong>Distancia:</strong> ${(dist / 1000).toFixed(2)} km
-                </p>
-                <button onclick="alert('Aquí puedes mostrar más información detallada')">Ver detalles</button>
+                <p><strong>Dirección:</strong> ${c.direccion || ''}<br>
+                <strong>Distrito:</strong> ${c.distrito || ''}<br>
+                <strong>Teléfono:</strong> ${c.telefono || 'No disponible'}<br>
+                <strong>Distancia:</strong> ${(dist / 1000).toFixed(2)} km</p>
+                <button onclick="alert('Aquí puedes mostrar más detalles del cliente')">Ver detalles</button>
               </div>
             `;
           }
         }
       });
+
+      // Actualizar el contenido del contenedor
       document.getElementById('lista-clientes').innerHTML = listaHtml;
     }
 
