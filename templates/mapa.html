@@ -36,8 +36,6 @@
   </style>
 </head>
 <body>
-
-  <!-- 🔓 Botón cerrar sesión -->
   <div class="cerrar-sesion">
     <form action="/logout" method="get">
       <button type="submit">Cerrar sesión</button>
@@ -63,6 +61,26 @@
       <option value="inactivo">Inactivo</option>
     </select>
 
+    <label for="prioridad">Prioridad:</label>
+    <select id="prioridad">
+      <option value="todos">Todos</option>
+      <option value="alta">Alta</option>
+      <option value="media">Media</option>
+      <option value="baja">Baja</option>
+    </select>
+
+    <label for="procesal">Procesal:</label>
+    <select id="procesal">
+      <option value="todos">Todos</option>
+      <option value="sentencia a favor">Sentencia a favor</option>
+      <option value="demanda admitida">Demanda admitida</option>
+      <option value="contradicción">Contradicción</option>
+      <option value="demanda presentada">Demanda presentada</option>
+      <option value="sentencia consentida">Sentencia consentida</option>
+      <option value="conclusion del proceso">Conclusión del proceso</option>
+      <option value="sin informacion">Sin información</option>
+    </select>
+
     <button onclick="limpiar()">🧹 Limpiar mapa</button>
   </div>
 
@@ -71,7 +89,6 @@
 
   <script>
     let clientes = {{ clientes | tojson | safe }};
-    console.log("✅ Clientes cargados:", clientes);
   </script>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -90,7 +107,7 @@
       alta: new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }),
       media: new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }),
       baja: new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }),
-      default: new L.Icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] })
+      default: new L.Icon.Default()
     };
 
     function limpiar() {
@@ -103,6 +120,9 @@
 
     function mostrarClientesCercanos(centro, radio) {
       const estadoFiltro = document.getElementById("estado").value.toLowerCase();
+      const prioridadFiltro = document.getElementById("prioridad").value.toLowerCase();
+      const procesalFiltro = document.getElementById("procesal").value.toLowerCase();
+
       marcadoresClientes.forEach(m => map.removeLayer(m));
       marcadoresClientes = [];
 
@@ -111,17 +131,21 @@
       clientes.forEach(c => {
         if (c.latitud && c.longitud && c.nombre) {
           const dist = map.distance(centro, [c.latitud, c.longitud]);
-
           const estado = (c.estado || '').toLowerCase();
-          const coincideEstado = (estadoFiltro === 'todos') || (estado === estadoFiltro);
+          const prioridad = (c.prioridad || '').toLowerCase();
+          const procesal = (c.procesal || '').toLowerCase();
 
-          if (dist <= radio && coincideEstado) {
-            const prioridad = (c.prioridad || '').toLowerCase();
+          const coincideEstado = (estadoFiltro === 'todos' || estado === estadoFiltro);
+          const coincidePrioridad = (prioridadFiltro === 'todos' || prioridad === prioridadFiltro);
+          const coincideProcesal = (procesalFiltro === 'todos' || procesal === procesalFiltro);
+
+          if (dist <= radio && coincideEstado && coincidePrioridad && coincideProcesal) {
             const icono = iconos[prioridad] || iconos.default;
 
             const marcador = L.marker([c.latitud, c.longitud], { icon: icono })
               .addTo(map)
-              .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}<br>${c.distrito || ''}<br>${c.telefono || ''}<br>Estado: ${c.estado || ''}`);
+              .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}<br>${c.distrito || ''}<br>${c.telefono || ''}<br>Estado: ${c.estado || ''}<br>Procesal: ${c.procesal || ''}`);
+
             marcadoresClientes.push(marcador);
 
             html += `
@@ -130,6 +154,7 @@
                 <p>${c.direccion || ''}<br>${c.distrito || ''}<br>${c.telefono || ''}<br>
                 Estado: ${c.estado || 'No definido'}<br>
                 Prioridad: ${c.prioridad || 'No definida'}<br>
+                Procesal: ${c.procesal || 'No definido'}<br>
                 Distancia: ${(dist / 1000).toFixed(2)} km</p>
               </div>
             `;
@@ -178,6 +203,8 @@
 
     document.getElementById("rango").addEventListener("change", actualizar);
     document.getElementById("estado").addEventListener("change", actualizar);
+    document.getElementById("prioridad").addEventListener("change", actualizar);
+    document.getElementById("procesal").addEventListener("change", actualizar);
   </script>
 </body>
 </html>
