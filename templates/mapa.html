@@ -11,7 +11,9 @@
       margin-bottom: 20px;
       border: 1px solid #ccc;
     }
-    #filtros { margin: 10px 0; }
+    #filtros {
+      margin: 10px 0;
+    }
     #lista-clientes {
       padding: 10px;
       border-top: 1px solid #ccc;
@@ -51,18 +53,15 @@
   <div id="map"></div>
   <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
 
-  <!-- ✅ JSON seguro: protegido por raw -->
-  {% raw %}
+  <!-- ✅ JSON seguro con |safe -->
   <script id="clientes-data" type="application/json">
-  {{ clientes | tojson }}
+    {{ clientes | tojson | safe }}
   </script>
-  {% endraw %}
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // Leer JSON seguro
     const clientes = JSON.parse(document.getElementById("clientes-data").textContent);
-    console.log("Clientes cargados:", clientes);
+    console.log("¿Clientes cargados correctamente?", clientes);
 
     const map = L.map('map').setView([-12.0464, -77.0428], 12);
 
