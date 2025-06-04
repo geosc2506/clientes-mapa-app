@@ -27,19 +27,24 @@
     .cliente h4 {
       margin: 0;
     }
-    #cerrar-sesion {
+    .cerrar-sesion {
       position: absolute;
-      right: 10px;
       top: 10px;
+      right: 20px;
+      z-index: 1000;
     }
   </style>
 </head>
 <body>
-  <h2>Mapa de Clientes (Lima, Perú)</h2>
 
-  <a id="cerrar-sesion" href="/logout">
-    <button>Cerrar sesión</button>
-  </a>
+  <!-- 🔓 Botón cerrar sesión -->
+  <div class="cerrar-sesion">
+    <form action="/logout" method="get">
+      <button type="submit">Cerrar sesión</button>
+    </form>
+  </div>
+
+  <h2>Mapa de Clientes (Lima, Perú)</h2>
 
   <div id="filtros">
     <label for="rango">Buscar dentro de:</label>
@@ -52,10 +57,10 @@
 
     <label for="estado">Estado:</label>
     <select id="estado">
-      <option value="Todos">Todos</option>
-      <option value="Pendiente">Pendiente</option>
-      <option value="En proceso">En proceso</option>
-      <option value="Completado">Completado</option>
+      <option value="todos">Todos</option>
+      <option value="activo">Activo</option>
+      <option value="pendiente">Pendiente</option>
+      <option value="inactivo">Inactivo</option>
     </select>
 
     <button onclick="limpiar()">🧹 Limpiar mapa</button>
@@ -64,22 +69,15 @@
   <div id="map"></div>
   <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
 
-  <!-- Datos desde Flask -->
-  <script id="clientes-data" type="application/json">
-    {{ clientes | tojson | safe }}
+  <script>
+    let clientes = {{ clientes | tojson | safe }};
+    console.log("✅ Clientes cargados:", clientes);
   </script>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    let clientes = [];
-
-    try {
-      clientes = JSON.parse(document.getElementById("clientes-data").textContent);
-    } catch (e) {
-      alert("❌ Error al cargar los datos de clientes.");
-    }
-
     const map = L.map('map').setView([-12.0464, -77.0428], 12);
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
@@ -87,6 +85,13 @@
     let marcadorUsuario = null;
     let circulo = null;
     let marcadoresClientes = [];
+
+    const iconos = {
+      alta: new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }),
+      media: new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }),
+      baja: new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }),
+      default: new L.Icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] })
+    };
 
     function limpiar() {
       if (circulo) map.removeLayer(circulo);
@@ -96,51 +101,59 @@
       document.getElementById('lista-clientes').innerHTML = "<strong>Clientes cercanos:</strong>";
     }
 
-    function colorPorEstado(estado) {
-      switch (estado) {
-        case "Pendiente": return "red";
-        case "En proceso": return "orange";
-        case "Completado": return "green";
-        default: return "blue";
-      }
-    }
-
     function mostrarClientesCercanos(centro, radio) {
-      const estadoSeleccionado = document.getElementById("estado").value;
+      const estadoFiltro = document.getElementById("estado").value.toLowerCase();
+      marcadoresClientes.forEach(m => map.removeLayer(m));
+      marcadoresClientes = [];
+
       let html = "<strong>Clientes cercanos:</strong>";
 
       clientes.forEach(c => {
-        if (c.latitud && c.longitud) {
+        if (c.latitud && c.longitud && c.nombre) {
           const dist = map.distance(centro, [c.latitud, c.longitud]);
-          const coincideEstado = estadoSeleccionado === "Todos" || c.estado === estadoSeleccionado;
+
+          const estado = (c.estado || '').toLowerCase();
+          const coincideEstado = (estadoFiltro === 'todos') || (estado === estadoFiltro);
 
           if (dist <= radio && coincideEstado) {
-            const marcador = L.circleMarker([c.latitud, c.longitud], {
-              radius: 8,
-              color: colorPorEstado(c.estado),
-              fillOpacity: 0.8
-            }).addTo(map);
+            const prioridad = (c.prioridad || '').toLowerCase();
+            const icono = iconos[prioridad] || iconos.default;
 
-            marcador.bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}<br>${c.estado || ''}`);
+            const marcador = L.marker([c.latitud, c.longitud], { icon: icono })
+              .addTo(map)
+              .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}<br>${c.distrito || ''}<br>${c.telefono || ''}<br>Estado: ${c.estado || ''}`);
             marcadoresClientes.push(marcador);
 
             html += `
               <div class="cliente">
                 <h4>${c.nombre}</h4>
-                <p>${c.direccion || ''}<br>${c.estado || ''}<br>Distancia: ${(dist / 1000).toFixed(2)} km</p>
+                <p>${c.direccion || ''}<br>${c.distrito || ''}<br>${c.telefono || ''}<br>
+                Estado: ${c.estado || 'No definido'}<br>
+                Prioridad: ${c.prioridad || 'No definida'}<br>
+                Distancia: ${(dist / 1000).toFixed(2)} km</p>
               </div>
             `;
           }
         }
       });
 
-      document.getElementById("lista-clientes").innerHTML = html;
+      document.getElementById('lista-clientes').innerHTML = html;
+    }
+
+    function actualizar() {
+      if (!marcadorUsuario || !circulo) return;
+      const centro = marcadorUsuario.getLatLng();
+      limpiar();
+      const rango = parseInt(document.getElementById('rango').value);
+      marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
+      circulo = L.circle([centro.lat, centro.lng], { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
+      mostrarClientesCercanos([centro.lat, centro.lng], rango);
     }
 
     map.on('click', function (e) {
       limpiar();
       const centro = [e.latlng.lat, e.latlng.lng];
-      const rango = parseInt(document.getElementById("rango").value);
+      const rango = parseInt(document.getElementById('rango').value);
       marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Punto seleccionado").openPopup();
       circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
       mostrarClientesCercanos(centro, rango);
@@ -150,8 +163,8 @@
       pos => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
+        const rango = parseInt(document.getElementById('rango').value);
         const centro = [lat, lng];
-        const rango = parseInt(document.getElementById("rango").value);
         map.setView(centro, 14);
         marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
         circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
@@ -159,29 +172,12 @@
       },
       err => {
         alert("No se pudo obtener tu ubicación. Haz clic en el mapa.");
+        console.warn("Geolocalización falló:", err);
       }
     );
 
-    // Filtros
-    document.getElementById("estado").addEventListener("change", () => {
-      if (!marcadorUsuario || !circulo) return;
-      const centro = marcadorUsuario.getLatLng();
-      limpiar();
-      const rango = parseInt(document.getElementById("rango").value);
-      marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
-      circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
-      mostrarClientesCercanos([centro.lat, centro.lng], rango);
-    });
-
-    document.getElementById("rango").addEventListener("change", () => {
-      if (!marcadorUsuario || !circulo) return;
-      const centro = marcadorUsuario.getLatLng();
-      limpiar();
-      const rango = parseInt(document.getElementById("rango").value);
-      marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
-      circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
-      mostrarClientesCercanos([centro.lat, centro.lng], rango);
-    });
+    document.getElementById("rango").addEventListener("change", actualizar);
+    document.getElementById("estado").addEventListener("change", actualizar);
   </script>
 </body>
 </html>
