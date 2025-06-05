@@ -3,15 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <title>Dashboard</title>
+  <style>
+    body {
+      background-image: url("/static/images/fondo-cubos.jpg");
+      background-size: cover;
+      background-position: center;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .contenedor {
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 30px;
+      border-radius: 10px;
+    }
+
+    a {
+      color: #00bfff;
+      display: block;
+      margin-top: 15px;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-  <h2>Bienvenido, {{ usuario }}!</h2>
-  <p>Has iniciado sesión correctamente.</p>
-
-  <!-- Enlace al mapa -->
-  <p><a href="/mapa">Ir al mapa de clientes</a></p>
-
-  <!-- Enlace para cerrar sesión -->
-  <p><a href="/logout">Cerrar sesión</a></p>
+  <div class="contenedor">
+    <h1>Bienvenido, {{ usuario }}!</h1>
+    <p>Has iniciado sesión correctamente.</p>
+    <a href="/mapa">Ir al mapa de clientes</a>
+    <a href="/logout">Cerrar sesión</a>
+  </div>
 </body>
 </html>
