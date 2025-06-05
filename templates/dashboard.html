@@ -1,71 +1,295 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa de Clientes (Lima, Perú)</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     body {
-      margin: 0;
-      padding: 0;
       background-image: url("/static/images/fondo-cubos.jpg");
       background-size: cover;
+      background-attachment: fixed;
       background-position: center;
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      background-repeat: no-repeat;
       color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
     }
 
-    .contenedor {
-      background-color: rgba(0, 0, 0, 0.75);
-      padding: 30px 20px;
-      border-radius: 10px;
-      text-align: center;
-      width: 90%;
-      max-width: 400px;
+    h2, label, button {
+      color: white;
+      text-shadow: 1px 1px 2px black;
     }
 
-    h1 {
-      margin-top: 0;
-      font-size: 24px;
+    select {
+      padding: 4px;
     }
 
-    p {
-      font-size: 16px;
+    #map {
+      height: 600px;
+      width: 100%;
       margin-bottom: 20px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
     }
 
-    a {
-      display: block;
-      margin: 8px 0;
-      color: #00bfff;
-      text-decoration: none;
-      font-weight: bold;
+    #filtros {
+      margin: 10px auto;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      border-radius: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
     }
 
-    a:hover {
-      text-decoration: underline;
+    #lista-clientes {
+      padding: 10px;
+      margin: 10px auto;
+      width: 95%;
+      border-top: 1px solid #ccc;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      max-height: 250px;
+      overflow-y: auto;
+      scrollbar-width: thin;
     }
 
-    @media (max-width: 400px) {
-      h1 {
-        font-size: 20px;
+    .cliente {
+      border: 1px solid #aaa;
+      background-color: rgba(0, 0, 0, 0.4);
+      color: white;
+      margin-bottom: 10px;
+      padding: 8px;
+      border-radius: 5px;
+    }
+
+    .cliente h4 {
+      margin: 0;
+      color: #fff;
+    }
+
+    .cerrar-sesion {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      z-index: 1000;
+    }
+
+    .cerrar-sesion button {
+      background-color: #ff5555;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      #map {
+        height: 50vh;
       }
-      p {
-        font-size: 14px;
+      label, select, button {
+        font-size: 13px;
+        padding: 3px;
+      }
+      #filtros {
+        flex-direction: column;
+        align-items: center;
+      }
+      #lista-clientes {
+        max-height: 200px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="contenedor">
-    <h1>Bienvenido, {{ usuario }}!</h1>
-    <p>Has iniciado sesión correctamente.</p>
-    <a href="/mapa">🗺️ Ir al mapa de clientes</a>
-    <a href="/logout">🚪 Cerrar sesión</a>
+
+  <div class="cerrar-sesion">
+    <form action="/logout" method="get">
+      <button type="submit">Cerrar sesión</button>
+    </form>
   </div>
+
+  <h2>Mapa de Clientes (Lima, Perú)</h2>
+
+  <div id="filtros">
+    <label for="rango">Buscar dentro de:</label>
+    <select id="rango">
+      <option value="500">500 metros</option>
+      <option value="1000">1 km</option>
+      <option value="2000">2 km</option>
+      <option value="5000">5 km</option>
+    </select>
+
+    <label for="estado">Estado:</label>
+    <select id="estado">
+      <option value="todos">Todos</option>
+      <option value="activo">Activo</option>
+      <option value="pendiente">Pendiente</option>
+      <option value="inactivo">Inactivo</option>
+    </select>
+
+    <label for="prioridad">Prioridad:</label>
+    <select id="prioridad">
+      <option value="todos">Todos</option>
+      <option value="alta">Alta</option>
+      <option value="media">Media</option>
+      <option value="baja">Baja</option>
+    </select>
+
+    <label for="procesal">Procesal:</label>
+    <select id="procesal">
+      <option value="todos">Todos</option>
+      <option value="sentencia a favor">sentencia a favor</option>
+      <option value="demanda admitida">demanda admitida</option>
+      <option value="demanda presentada">demanda presentada</option>
+      <option value="conclusion del proceso">conclusion del proceso</option>
+    </select>
+
+    <button onclick="limpiar()">🧹 Limpiar mapa</button>
+    <button onclick="actualizarUbicacion()">📍 Actualizar ubicación</button>
+  </div>
+
+  <div id="map"></div>
+  <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
+
+  <script>
+    let clientes = {{ clientes | tojson | safe }};
+  </script>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([-12.0464, -77.0428], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let marcadorUsuario = null;
+    let circulo = null;
+    let marcadoresClientes = [];
+
+    const iconos = {
+      alta: new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }),
+      media: new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }),
+      baja: new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }),
+      default: new L.Icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] })
+    };
+
+    function limpiar() {
+      if (circulo) map.removeLayer(circulo);
+      if (marcadorUsuario) map.removeLayer(marcadorUsuario);
+      marcadoresClientes.forEach(m => map.removeLayer(m));
+      marcadoresClientes = [];
+      document.getElementById('lista-clientes').innerHTML = "<strong>Clientes cercanos:</strong>";
+    }
+
+    function mostrarClientesCercanos(centro, radio) {
+      const estadoFiltro = document.getElementById("estado").value.toLowerCase();
+      const prioridadFiltro = document.getElementById("prioridad").value.toLowerCase();
+      const procesalFiltro = document.getElementById("procesal").value.toLowerCase();
+
+      marcadoresClientes.forEach(m => map.removeLayer(m));
+      marcadoresClientes = [];
+
+      let html = "<strong>Clientes cercanos:</strong>";
+
+      clientes.forEach(c => {
+        if (c.latitud && c.longitud && c.nombre) {
+          const dist = map.distance(centro, [c.latitud, c.longitud]);
+          const estado = (c.estado || '').toLowerCase();
+          const prioridad = (c.prioridad || '').toLowerCase();
+          const procesal = (c.procesal || '').toLowerCase();
+
+          const coincideEstado = (estadoFiltro === 'todos') || (estado === estadoFiltro);
+          const coincidePrioridad = (prioridadFiltro === 'todos') || (prioridad === prioridadFiltro);
+          const coincideProcesal = (procesalFiltro === 'todos') || (procesal === procesalFiltro);
+
+          if (dist <= radio && coincideEstado && coincidePrioridad && coincideProcesal) {
+            const icono = iconos[prioridad] || iconos.default;
+
+            const marcador = L.marker([c.latitud, c.longitud], { icon: icono })
+              .addTo(map)
+              .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}<br>${c.distrito || ''}<br>${c.telefono || ''}<br>Estado: ${c.estado || ''}`);
+            marcadoresClientes.push(marcador);
+
+            html += `
+              <div class="cliente">
+                <h4>${c.nombre}</h4>
+                <p>${c.direccion || ''}<br>${c.distrito || ''}<br>${c.telefono || ''}<br>
+                Estado: ${c.estado || 'No definido'}<br>
+                Prioridad: ${c.prioridad || 'No definida'}<br>
+                Procesal: ${c.procesal || 'No definido'}<br>
+                Distancia: ${(dist / 1000).toFixed(2)} km</p>
+              </div>
+            `;
+          }
+        }
+      });
+
+      document.getElementById('lista-clientes').innerHTML = html;
+    }
+
+    function actualizar() {
+      if (!marcadorUsuario || !circulo) return;
+      const centro = marcadorUsuario.getLatLng();
+      limpiar();
+      const rango = parseInt(document.getElementById('rango').value);
+      marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
+      circulo = L.circle([centro.lat, centro.lng], { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
+      mostrarClientesCercanos([centro.lat, centro.lng], rango);
+    }
+
+    function actualizarUbicacion() {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const centro = [pos.coords.latitude, pos.coords.longitude];
+          const rango = parseInt(document.getElementById('rango').value);
+          limpiar();
+          map.setView(centro, 14);
+          marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
+          circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
+          mostrarClientesCercanos(centro, rango);
+        },
+        err => {
+          alert("No se pudo obtener tu ubicación");
+          console.warn("Geolocalización falló:", err);
+        }
+      );
+    }
+
+    map.on('click', function (e) {
+      const centro = [e.latlng.lat, e.latlng.lng];
+      const rango = parseInt(document.getElementById('rango').value);
+      limpiar();
+      marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Punto seleccionado").openPopup();
+      circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
+      mostrarClientesCercanos(centro, rango);
+    });
+
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const centro = [pos.coords.latitude, pos.coords.longitude];
+        const rango = parseInt(document.getElementById('rango').value);
+        map.setView(centro, 14);
+        marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
+        circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
+        mostrarClientesCercanos(centro, rango);
+      },
+      err => {
+        alert("No se pudo obtener tu ubicación. Haz clic en el mapa.");
+        console.warn("Geolocalización falló:", err);
+      }
+    );
+
+    document.getElementById("rango").addEventListener("change", actualizar);
+    document.getElementById("estado").addEventListener("change", actualizar);
+    document.getElementById("prioridad").addEventListener("change", actualizar);
+    document.getElementById("procesal").addEventListener("change", actualizar);
+  </script>
 </body>
 </html>
