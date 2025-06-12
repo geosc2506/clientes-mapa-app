@@ -86,16 +86,17 @@
     <label>Prioridad:</label>
     <select id="prioridad">
       <option value="todos">Todos</option>
-      <option value="alta">Alta</option>
-      <option value="media">Media</option>
-      <option value="baja">Baja</option>
+      {% for p in prioridades %}
+        <option value="{{ p }}">{{ p }}</option>
+      {% endfor %}
     </select>
 
     <label>Procesal:</label>
     <select id="procesal">
       <option value="todos">Todos</option>
-      <option value="demanda presentada">Demanda presentada</option>
-      <option value="sentencia consentida">Sentencia consentida</option>
+      {% for p in procesales %}
+        <option value="{{ p }}">{{ p }}</option>
+      {% endfor %}
     </select>
 
     <button onclick="reiniciarUbicacion()">📍 Actualizar ubicación</button>
@@ -227,7 +228,6 @@
       });
     });
 
-    // Clic en el mapa para redibujar radio desde otro punto
     map.on("click", function (e) {
       const centro = [e.latlng.lat, e.latlng.lng];
       const rango = parseInt(document.getElementById("rango").value);
