@@ -208,7 +208,6 @@
       iniciarMapa();
     }
 
-    // Reaccionar a cambios de filtros
     ["rango", "estado", "prioridad", "procesal"].forEach(id => {
       document.getElementById(id).addEventListener("change", () => {
         if (marcadorUsuario) {
