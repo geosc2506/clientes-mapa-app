@@ -134,6 +134,7 @@
 
     function mostrarClientes(centro, radio) {
       limpiar();
+
       const estadoFiltro = document.getElementById("estado").value;
       const prioridadFiltro = document.getElementById("prioridad").value;
       const procesalFiltro = document.getElementById("procesal").value;
@@ -181,24 +182,29 @@
       }
     }
 
+    function dibujarCirculo(centro, radio) {
+      if (circulo) map.removeLayer(circulo);
+      circulo = L.circle(centro, {
+        radius: radio,
+        color: 'blue',
+        fillColor: '#3f51b5',
+        fillOpacity: 0.15
+      }).addTo(map);
+      console.log("✅ Círculo creado en:", centro, "radio:", radio);
+    }
+
     function iniciarMapa() {
       navigator.geolocation.getCurrentPosition(pos => {
         const centro = [pos.coords.latitude, pos.coords.longitude];
         const rango = parseInt(document.getElementById("rango").value);
 
         if (marcadorUsuario) map.removeLayer(marcadorUsuario);
-        if (circulo) map.removeLayer(circulo);
-
         marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
-        circulo = L.circle(centro, {
-          radius: rango,
-          color: 'blue',
-          fillColor: '#3f51b5',
-          fillOpacity: 0.15
-        }).addTo(map);
 
         map.setView(centro, 14);
         mostrarClientes(centro, rango);
+        dibujarCirculo(centro, rango);
+
       }, () => {
         alert("No se pudo obtener tu ubicación.");
       });
@@ -213,14 +219,8 @@
         if (marcadorUsuario) {
           const centro = marcadorUsuario.getLatLng();
           const rango = parseInt(document.getElementById("rango").value);
-          if (circulo) map.removeLayer(circulo);
-          circulo = L.circle(centro, {
-            radius: rango,
-            color: 'blue',
-            fillColor: '#3f51b5',
-            fillOpacity: 0.15
-          }).addTo(map);
           mostrarClientes([centro.lat, centro.lng], rango);
+          dibujarCirculo([centro.lat, centro.lng], rango);
         }
       });
     });
