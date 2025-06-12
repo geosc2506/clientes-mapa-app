@@ -87,7 +87,7 @@
     <select id="prioridad">
       <option value="todos">Todos</option>
       {% for p in prioridades %}
-        <option value="{{ p }}">{{ p }}</option>
+        <option value="{{ p|lower }}">{{ p }}</option>
       {% endfor %}
     </select>
 
@@ -95,7 +95,7 @@
     <select id="procesal">
       <option value="todos">Todos</option>
       {% for p in procesales %}
-        <option value="{{ p }}">{{ p }}</option>
+        <option value="{{ p|lower }}">{{ p }}</option>
       {% endfor %}
     </select>
 
@@ -108,14 +108,7 @@
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    let clientes = [];
-    try {
-      clientes = {{ clientes | tojson | safe }};
-      console.log("✅ Clientes cargados:", clientes.length);
-    } catch (e) {
-      console.error("❌ No se pudo cargar clientes", e);
-    }
-
+    const clientes = {{ clientes | tojson | safe }};
     const map = L.map('map').setView([-12.0464, -77.0428], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
@@ -147,9 +140,8 @@
       const prioridadFiltro = document.getElementById("prioridad").value.toLowerCase();
       const procesalFiltro = document.getElementById("procesal").value.toLowerCase();
 
-      console.log("📍 Mostrando desde:", centro, "rango:", radio);
-
       let html = "<strong>Clientes cercanos:</strong>";
+
       clientes.forEach(c => {
         const dist = map.distance(centro, [c.latitud, c.longitud]);
         const coincide =
