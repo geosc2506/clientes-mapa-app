@@ -52,6 +52,7 @@
   <div id="filtros">
     <label for="rango">Rango:</label>
     <select id="rango">
+      <option value="500">500 metros</option>
       <option value="1000">1 km</option>
       <option value="2000">2 km</option>
       <option value="5000">5 km</option>
@@ -94,8 +95,9 @@
               <div class="cliente">
                 <h4>${c.nombre}</h4>
                 <p>${c.direccion || ''} - ${c.distrito || ''}</p>
-                <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en mapa</button>
-              </div>`;
+                <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en el mapa</button>
+              </div>
+            `;
           }
         }
       });
