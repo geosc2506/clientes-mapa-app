@@ -190,7 +190,6 @@
         fillColor: '#3f51b5',
         fillOpacity: 0.15
       }).addTo(map);
-      console.log("✅ Círculo creado en:", centro, "radio:", radio);
     }
 
     function iniciarMapa() {
@@ -204,7 +203,6 @@
         map.setView(centro, 14);
         mostrarClientes(centro, rango);
         dibujarCirculo(centro, rango);
-
       }, () => {
         alert("No se pudo obtener tu ubicación.");
       });
@@ -223,6 +221,18 @@
           dibujarCirculo([centro.lat, centro.lng], rango);
         }
       });
+    });
+
+    // NUEVO: click manual para ubicar un nuevo punto y redibujar círculo
+    map.on("click", function (e) {
+      const centro = [e.latlng.lat, e.latlng.lng];
+      const rango = parseInt(document.getElementById("rango").value);
+
+      if (marcadorUsuario) map.removeLayer(marcadorUsuario);
+      marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Ubicación seleccionada").openPopup();
+
+      mostrarClientes(centro, rango);
+      dibujarCirculo(centro, rango);
     });
 
     iniciarMapa();
