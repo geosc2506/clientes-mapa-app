@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login</title>
   <style>
     body {
-      background-image: url("/static/images/fondo-cubos.jpg");
+      background-image: url("{{ url_for('static', filename='images/fondo-cubos.jpg') }}");
       background-size: cover;
       background-position: center;
       margin: 0;
@@ -20,17 +20,23 @@
 
     .login-box {
       background: rgba(255, 255, 255, 0.9);
-      padding: 30px;
+      padding: 30px 20px;
       border-radius: 8px;
       box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
       width: 90%;
       max-width: 320px;
+      text-align: center;
+    }
+
+    .login-box img {
+      width: 100px;
+      margin-bottom: 10px;
     }
 
     h2 {
-      text-align: center;
       margin-bottom: 20px;
       font-size: 22px;
+      color: #333;
     }
 
     label {
@@ -38,9 +44,11 @@
       margin-top: 10px;
       font-weight: bold;
       font-size: 14px;
+      text-align: left;
     }
 
-    input[type="text"], input[type="password"] {
+    input[type="text"],
+    input[type="password"] {
       width: 100%;
       padding: 10px;
       margin-top: 5px;
@@ -69,7 +77,11 @@
 </head>
 <body>
   <div class="login-box">
+    <!-- ✅ Carga dinámica del logo -->
+    <img src="{{ url_for('static', filename='images/logo-geo.png') }}" alt="Logo GEO">
+    
     <h2>Iniciar sesión</h2>
+
     <form method="post">
       <label for="usuario">Usuario:</label>
       <input type="text" name="usuario" id="usuario" required>

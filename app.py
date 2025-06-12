@@ -4,11 +4,11 @@ import requests
 from io import StringIO
 
 app = Flask(__name__)
-app.secret_key = 'secreto123'  # Usa una clave segura en producción
+app.secret_key = 'secreto123'  # Cambiar esto en producción
 
-# =======================
-# 🔄 Obtener clientes CSV
-# =======================
+# ====================================
+# 🔄 Función para obtener clientes CSV
+# ====================================
 def obtener_clientes():
     try:
         url = "https://docs.google.com/spreadsheets/d/1YCEuaC-E-pSPsT-VnitCDBT5cc5k_qh3_2wxtbTuCOs/export?format=csv"
@@ -17,24 +17,23 @@ def obtener_clientes():
 
         df = pd.read_csv(StringIO(response.text))
 
-        # Normalizar columnas requeridas
+        # Asegurar columnas clave
         columnas = ['nombre', 'direccion', 'latitud', 'longitud', 'distrito', 'telefono',
                     'estado', 'prioridad', 'procesal', 'contactabilidad', 'id deudor']
         for col in columnas:
             if col not in df.columns:
                 df[col] = ''
 
-        # Renombrar para evitar espacios
         df.rename(columns={'id deudor': 'id_deudor'}, inplace=True)
 
-        # Convertir coordenadas a numérico
+        # Convertir coordenadas
         df['latitud'] = pd.to_numeric(df['latitud'], errors='coerce')
         df['longitud'] = pd.to_numeric(df['longitud'], errors='coerce')
         df = df.dropna(subset=['latitud', 'longitud'])
 
-        # Limpieza: convertir a título para evitar errores de mayúsculas
+        # Normalizar valores para los filtros
         for col in ['estado', 'prioridad', 'procesal', 'contactabilidad']:
-            df[col] = df[col].astype(str).fillna('').str.strip().str.title()
+            df[col] = df[col].astype(str).str.strip().str.lower()
 
         return df.to_dict(orient='records')
 
@@ -42,9 +41,9 @@ def obtener_clientes():
         print("❌ Error al cargar clientes:", e)
         return []
 
-# ========================
+# ==============================
 # 🔐 Sistema de autenticación
-# ========================
+# ==============================
 USUARIO = 'geo'
 CLAVE = 'akira'
 
@@ -76,27 +75,39 @@ def dashboard():
         return redirect('/login')
     return render_template('dashboard.html', usuario=session['usuario'])
 
+# ====================================
+# 📍 Ruta principal del mapa
+# ====================================
 @app.route('/mapa')
 def mapa():
     if 'usuario' not in session:
         return redirect('/login')
     
     clientes = obtener_clientes()
+
+    # Extraer valores únicos para filtros (ya están en minúsculas)
     prioridades = sorted(set(c['prioridad'] for c in clientes if c.get('prioridad')))
     procesales = sorted(set(c['procesal'] for c in clientes if c.get('procesal')))
+    contactabilidades = sorted(set(c['contactabilidad'] for c in clientes if c.get('contactabilidad')))
 
-    return render_template('mapa.html',
-                           clientes=clientes,
-                           prioridades=prioridades,
-                           procesales=procesales)
+    return render_template(
+        'mapa.html',
+        clientes=clientes,
+        prioridades=prioridades,
+        procesales=procesales,
+        contactabilidades=contactabilidades
+    )
 
+# ===========================
+# 🧪 Ruta de depuración JSON
+# ===========================
 @app.route('/debug-clientes')
 def debug_clientes():
     clientes = obtener_clientes()
     return jsonify(clientes)
 
-# ========================
-# 🔽 Ejecutar servidor local
-# ========================
+# ===========================
+# 🚀 Ejecutar servidor local
+# ===========================
 if __name__ == '__main__':
     app.run(debug=True)

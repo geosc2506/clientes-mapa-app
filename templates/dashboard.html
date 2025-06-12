@@ -1,45 +1,76 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bienvenido</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
   <style>
     body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
       background-image: url("/static/images/fondo-cubos.jpg");
       background-size: cover;
-      background-position: center;
       background-attachment: fixed;
-      font-family: Arial, sans-serif;
+      background-position: center;
+      background-repeat: no-repeat;
       color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
       text-align: center;
-      padding: 5vh 2vw;
     }
-    .card {
-      background-color: rgba(0,0,0,0.6);
-      padding: 2em;
-      border-radius: 10px;
-      display: inline-block;
+
+    .contenedor {
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
       max-width: 90%;
     }
-    a {
-      color: #00ccff;
-      text-decoration: none;
-      display: block;
-      margin-top: 1em;
-      font-weight: bold;
+
+    h1 {
+      margin-bottom: 15px;
     }
+
+    a {
+      display: inline-block;
+      margin: 10px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background 0.3s;
+    }
+
     a:hover {
-      text-decoration: underline;
+      background-color: #0056b3;
+    }
+
+    @media (max-width: 600px) {
+      .contenedor {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      a {
+        padding: 8px 16px;
+        font-size: 14px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="card">
+  <div class="contenedor">
     <h1>Bienvenido, {{ usuario }}!</h1>
     <p>Has iniciado sesión correctamente.</p>
     <a href="/mapa">📍 Ir al mapa de clientes</a>
-    <a href="/logout">🔒 Cerrar sesión</a>
+    <a href="/logout">🚪 Cerrar sesión</a>
   </div>
 </body>
 </html>
