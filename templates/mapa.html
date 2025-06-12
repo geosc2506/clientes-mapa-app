@@ -2,90 +2,56 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Mapa de Clientes (Lima, Perú)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa de Clientes</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     body {
       background-image: url("/static/images/fondo-cubos.jpg");
       background-size: cover;
-      background-attachment: fixed;
-      background-position: center;
-      background-repeat: no-repeat;
-      color: white;
       font-family: Arial, sans-serif;
-    }
-
-    h2, label, button {
       color: white;
-      text-shadow: 1px 1px 2px black;
-    }
-
-    select {
-      padding: 4px;
+      margin: 0;
+      padding: 0;
     }
 
     #map {
-      height: 600px;
-      width: 100%;
-      margin-bottom: 20px;
-      border: 2px solid #ccc;
+      height: 60vh;
+      margin: 10px auto;
+      width: 95%;
       border-radius: 8px;
     }
 
-    #filtros {
-      margin: 10px 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      padding: 10px;
-      border-radius: 10px;
+    #filtros, #lista-clientes {
+      width: 95%;
+      margin: auto;
     }
 
-    #lista-clientes {
-      padding: 10px;
-      border-top: 1px solid #ccc;
-      background-color: rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
+    #filtros label, #filtros select {
+      margin-right: 10px;
     }
 
     .cliente {
-      border: 1px solid #aaa;
-      background-color: rgba(0, 0, 0, 0.4);
-      color: white;
-      margin-bottom: 10px;
-      padding: 8px;
-      border-radius: 5px;
+      background: rgba(0,0,0,0.4);
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 6px;
     }
 
-    .cliente h4 {
-      margin: 0;
-      color: #fff;
-    }
-
-    .cerrar-sesion {
-      position: absolute;
-      top: 10px;
-      right: 20px;
-      z-index: 1000;
-    }
-
-    .cerrar-sesion button {
-      background-color: #ff5555;
+    .cliente button {
+      margin-top: 5px;
+      padding: 6px;
+      background: #3498db;
       color: white;
       border: none;
-      padding: 6px 12px;
-      border-radius: 5px;
+      border-radius: 4px;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-  <div class="cerrar-sesion">
-    <form action="/logout" method="get">
-      <button type="submit">Cerrar sesión</button>
-    </form>
-  </div>
-
-  <h2>Mapa de Clientes (Lima, Perú)</h2>
+  <h2 style="text-align:center">📍 Mapa de Clientes (Lima, Perú)</h2>
 
   <div id="filtros">
     <label for="rango">Buscar dentro de:</label>
@@ -100,8 +66,7 @@
     <select id="estado">
       <option value="todos">Todos</option>
       <option value="activo">Activo</option>
-      <option value="pendiente">Pendiente</option>
-      <option value="inactivo">Inactivo</option>
+      <option value="no activo">No activo</option>
     </select>
 
     <label for="prioridad">Prioridad:</label>
@@ -115,153 +80,133 @@
     <label for="procesal">Procesal:</label>
     <select id="procesal">
       <option value="todos">Todos</option>
-      <option value="sentencia a favor">sentencia a favor</option>
-      <option value="demanda admitida">demanda admitida</option>
-      <option value="demanda presentada">demanda presentada</option>
-      <option value="conclusion del proceso">conclusion del proceso</option>
+      <option value="demanda presentada">Demanda presentada</option>
+      <option value="sentencia consentida">Sentencia consentida</option>
     </select>
 
-    <button onclick="limpiar()">🧹 Limpiar mapa</button>
-    <button onclick="actualizarUbicacion()">📍 Actualizar ubicación</button>
+    <label for="contactabilidad">Contactabilidad:</label>
+    <select id="contactabilidad">
+      <option value="todos">Todos</option>
+      <option value="contacto directo">Contacto directo</option>
+      <option value="contacto indirecto">Contacto indirecto</option>
+      <option value="no contacto">No contacto</option>
+    </select>
   </div>
 
   <div id="map"></div>
   <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
 
-  <script>
-    let clientes = {{ clientes | tojson | safe }};
-    console.log("✅ Clientes cargados:", clientes);
-  </script>
-
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map').setView([-12.0464, -77.0428], 12);
+    const clientes = {{ clientes | tojson | safe }};
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+    const map = L.map('map').setView([-12.0464, -77.0428], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     let marcadorUsuario = null;
     let circulo = null;
-    let marcadoresClientes = [];
-
-    const iconos = {
-      alta: new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }),
-      media: new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }),
-      baja: new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }),
-      default: new L.Icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] })
-    };
+    let marcadores = {};
 
     function limpiar() {
-      if (circulo) map.removeLayer(circulo);
-      if (marcadorUsuario) map.removeLayer(marcadorUsuario);
-      marcadoresClientes.forEach(m => map.removeLayer(m));
-      marcadoresClientes = [];
-      document.getElementById('lista-clientes').innerHTML = "<strong>Clientes cercanos:</strong>";
+      Object.values(marcadores).forEach(m => map.removeLayer(m));
+      marcadores = {};
+      document.getElementById("lista-clientes").innerHTML = "<strong>Clientes cercanos:</strong>";
     }
 
-    function mostrarClientesCercanos(centro, radio) {
-      const estadoFiltro = document.getElementById("estado").value.toLowerCase();
-      const prioridadFiltro = document.getElementById("prioridad").value.toLowerCase();
-      const procesalFiltro = document.getElementById("procesal").value.toLowerCase();
+    function mostrarClientes(centro, radio) {
+      limpiar();
 
-      marcadoresClientes.forEach(m => map.removeLayer(m));
-      marcadoresClientes = [];
+      const filtroEstado = document.getElementById("estado").value;
+      const filtroPrioridad = document.getElementById("prioridad").value;
+      const filtroProcesal = document.getElementById("procesal").value;
+      const filtroContacto = document.getElementById("contactabilidad").value;
 
       let html = "<strong>Clientes cercanos:</strong>";
 
       clientes.forEach(c => {
-        if (c.latitud && c.longitud && c.nombre) {
+        const coincide =
+          c.latitud && c.longitud && c.id_deudor &&
+          (filtroEstado === "todos" || c.estado === filtroEstado) &&
+          (filtroPrioridad === "todos" || c.prioridad === filtroPrioridad) &&
+          (filtroProcesal === "todos" || c.procesal === filtroProcesal) &&
+          (filtroContacto === "todos" || c.contactabilidad === filtroContacto);
+
+        if (coincide) {
           const dist = map.distance(centro, [c.latitud, c.longitud]);
-          const estado = (c.estado || '').toLowerCase();
-          const prioridad = (c.prioridad || '').toLowerCase();
-          const procesal = (c.procesal || '').toLowerCase();
-
-          const coincideEstado = (estadoFiltro === 'todos') || (estado === estadoFiltro);
-          const coincidePrioridad = (prioridadFiltro === 'todos') || (prioridad === prioridadFiltro);
-          const coincideProcesal = (procesalFiltro === 'todos') || (procesal === procesalFiltro);
-
-          if (dist <= radio && coincideEstado && coincidePrioridad && coincideProcesal) {
-            const icono = iconos[prioridad] || iconos.default;
-
-            const marcador = L.marker([c.latitud, c.longitud], { icon: icono })
+          if (dist <= radio) {
+            const marcador = L.marker([c.latitud, c.longitud])
               .addTo(map)
-              .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}<br>${c.distrito || ''}<br>${c.telefono || ''}<br>Estado: ${c.estado || ''}`);
-            marcadoresClientes.push(marcador);
+              .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`);
+            marcadores[c.id_deudor] = marcador;
 
             html += `
               <div class="cliente">
                 <h4>${c.nombre}</h4>
-                <p>${c.direccion || ''}<br>${c.distrito || ''}<br>${c.telefono || ''}<br>
-                Estado: ${c.estado || 'No definido'}<br>
-                Prioridad: ${c.prioridad || 'No definida'}<br>
-                Procesal: ${c.procesal || 'No definido'}<br>
-                Distancia: ${(dist / 1000).toFixed(2)} km</p>
-              </div>
-            `;
+                <p>${c.direccion || ''} - ${c.distrito || ''}</p>
+                <p><strong>Estado:</strong> ${c.estado || ''}</p>
+                <p><strong>Prioridad:</strong> ${c.prioridad || ''}</p>
+                <p><strong>Procesal:</strong> ${c.procesal || ''}</p>
+                <p><strong>Contactabilidad:</strong> ${c.contactabilidad || ''}</p>
+                <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en mapa</button>
+              </div>`;
           }
         }
       });
 
-      document.getElementById('lista-clientes').innerHTML = html;
+      document.getElementById("lista-clientes").innerHTML = html;
     }
 
-    function actualizar() {
-      if (!marcadorUsuario || !circulo) return;
-      const centro = marcadorUsuario.getLatLng();
-      limpiar();
-      const rango = parseInt(document.getElementById('rango').value);
-      marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
-      circulo = L.circle([centro.lat, centro.lng], { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
-      mostrarClientesCercanos([centro.lat, centro.lng], rango);
+    function centrarEnCliente(id) {
+      const marcador = marcadores[id];
+      if (marcador) {
+        map.setView(marcador.getLatLng(), 16);
+        marcador.openPopup();
+      }
     }
 
-    function actualizarUbicacion() {
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          const centro = [pos.coords.latitude, pos.coords.longitude];
-          const rango = parseInt(document.getElementById('rango').value);
-          limpiar();
-          map.setView(centro, 14);
-          marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
-          circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
-          mostrarClientesCercanos(centro, rango);
-        },
-        err => {
-          alert("No se pudo obtener tu ubicación");
-          console.warn("Geolocalización falló:", err);
-        }
-      );
-    }
-
-    map.on('click', function (e) {
-      const centro = [e.latlng.lat, e.latlng.lng];
-      const rango = parseInt(document.getElementById('rango').value);
-      limpiar();
-      marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Punto seleccionado").openPopup();
-      circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
-      mostrarClientesCercanos(centro, rango);
-    });
-
-    navigator.geolocation.getCurrentPosition(
-      pos => {
+    function iniciarMapa() {
+      navigator.geolocation.getCurrentPosition(pos => {
         const centro = [pos.coords.latitude, pos.coords.longitude];
-        const rango = parseInt(document.getElementById('rango').value);
-        map.setView(centro, 14);
+        const rango = parseInt(document.getElementById("rango").value);
         marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
         circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
-        mostrarClientesCercanos(centro, rango);
-      },
-      err => {
-        alert("No se pudo obtener tu ubicación. Haz clic en el mapa.");
-        console.warn("Geolocalización falló:", err);
-      }
-    );
+        map.setView(centro, 14);
+        mostrarClientes(centro, rango);
+      }, () => {
+        alert("No se pudo obtener tu ubicación.");
+      });
+    }
 
-    document.getElementById("rango").addEventListener("change", actualizar);
-    document.getElementById("estado").addEventListener("change", actualizar);
-    document.getElementById("prioridad").addEventListener("change", actualizar);
-    document.getElementById("procesal").addEventListener("change", actualizar);
+    function reiniciarUbicacion() {
+      navigator.geolocation.getCurrentPosition(pos => {
+        const centro = [pos.coords.latitude, pos.coords.longitude];
+        const rango = parseInt(document.getElementById("rango").value);
+
+        if (marcadorUsuario) map.removeLayer(marcadorUsuario);
+        marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
+
+        if (circulo) map.removeLayer(circulo);
+        circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
+
+        map.setView(centro, 14);
+        mostrarClientes(centro, rango);
+      }, () => {
+        alert("No se pudo obtener tu ubicación.");
+      });
+    }
+
+    // Eventos para actualizar clientes al cambiar filtros
+    ["rango", "estado", "prioridad", "procesal", "contactabilidad"].forEach(id => {
+      document.getElementById(id).addEventListener("change", () => {
+        if (marcadorUsuario) {
+          const centro = marcadorUsuario.getLatLng();
+          const rango = parseInt(document.getElementById("rango").value);
+          mostrarClientes([centro.lat, centro.lng], rango);
+        }
+      });
+    });
+
+    iniciarMapa();
   </script>
 </body>
 </html>
