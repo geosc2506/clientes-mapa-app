@@ -112,8 +112,8 @@
     try {
       clientes = {{ clientes | tojson | safe }};
       console.log("✅ Clientes cargados:", clientes.length);
-    } catch (error) {
-      console.error("❌ Error cargando clientes:", error);
+    } catch (e) {
+      console.error("❌ No se pudo cargar clientes", e);
     }
 
     const map = L.map('map').setView([-12.0464, -77.0428], 13);
@@ -143,18 +143,20 @@
     function mostrarClientes(centro, radio) {
       limpiar();
 
-      const estadoFiltro = document.getElementById("estado").value;
-      const prioridadFiltro = document.getElementById("prioridad").value;
-      const procesalFiltro = document.getElementById("procesal").value;
+      const estadoFiltro = document.getElementById("estado").value.toLowerCase();
+      const prioridadFiltro = document.getElementById("prioridad").value.toLowerCase();
+      const procesalFiltro = document.getElementById("procesal").value.toLowerCase();
+
+      console.log("📍 Mostrando desde:", centro, "rango:", radio);
 
       let html = "<strong>Clientes cercanos:</strong>";
       clientes.forEach(c => {
-        const coincide =
-          (estadoFiltro === "todos" || c.estado === estadoFiltro) &&
-          (prioridadFiltro === "todos" || c.prioridad === prioridadFiltro) &&
-          (procesalFiltro === "todos" || c.procesal === procesalFiltro);
-
         const dist = map.distance(centro, [c.latitud, c.longitud]);
+        const coincide =
+          (estadoFiltro === "todos" || (c.estado || '').toLowerCase() === estadoFiltro) &&
+          (prioridadFiltro === "todos" || (c.prioridad || '').toLowerCase() === prioridadFiltro) &&
+          (procesalFiltro === "todos" || (c.procesal || '').toLowerCase() === procesalFiltro);
+
         if (c.latitud && c.longitud && c.id_deudor && dist <= radio && coincide) {
           const icono = L.icon({
             iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorPorPrioridad(c.prioridad)}.png`,
