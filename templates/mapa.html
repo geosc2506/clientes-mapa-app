@@ -7,44 +7,51 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     body {
-      background-color: black;
-      color: white;
+      margin: 0;
       font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
     }
     #map {
-      height: 500px;
-      margin-bottom: 10px;
+      height: 65vh;
+      width: 100%;
     }
     #filtros {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 10px;
+      background: #222;
+      padding: 10px;
     }
-    select, button {
-      padding: 4px;
-      border-radius: 5px;
+    #filtros select, #filtros button {
+      padding: 5px;
+      border-radius: 4px;
+    }
+    #lista-clientes {
+      padding: 10px;
+      background: #000;
+      max-height: 30vh;
+      overflow-y: auto;
     }
     .cliente {
-      background-color: #111;
-      margin-bottom: 10px;
+      background: #222;
+      margin: 10px 0;
       padding: 10px;
-      border-radius: 5px;
+      border-radius: 6px;
     }
     .cliente button {
-      margin-top: 5px;
-      background-color: #3498db;
-      border: none;
+      background: #3498db;
       color: white;
+      border: none;
       padding: 5px 10px;
-      border-radius: 3px;
+      border-radius: 4px;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-  <h3>📍 Mapa de clientes</h3>
+  <h3 style="margin: 0; padding: 10px;">📍 Mapa de clientes</h3>
 
   <div id="filtros">
     <label>Radio:
@@ -52,9 +59,9 @@
         <option value="500">500 metros</option>
         <option value="1000">1 kilómetro</option>
         <option value="2000">2 kilómetros</option>
+        <option value="5000">5 kilómetros</option>
       </select>
     </label>
-
     <label>Estado:
       <select id="estado">
         <option value="todos">Todos</option>
@@ -62,40 +69,35 @@
         <option value="no activo">No activo</option>
       </select>
     </label>
-
     <label>Prioridad:
       <select id="prioridad">
         <option value="todos">Todos</option>
         {% for p in prioridades %}
-          <option value="{{ p }}">{{ p }}</option>
+        <option value="{{ p }}">{{ p }}</option>
         {% endfor %}
       </select>
     </label>
-
     <label>Procesal:
       <select id="procesal">
         <option value="todos">Todos</option>
         {% for p in procesales %}
-          <option value="{{ p }}">{{ p }}</option>
+        <option value="{{ p }}">{{ p }}</option>
         {% endfor %}
       </select>
     </label>
-
     <label>Contactabilidad:
       <select id="contactabilidad">
         <option value="todos">Todos</option>
         {% for p in contactabilidades %}
-          <option value="{{ p }}">{{ p }}</option>
+        <option value="{{ p }}">{{ p }}</option>
         {% endfor %}
       </select>
     </label>
-
     <button onclick="reiniciarUbicacion()">📍 Mi ubicación</button>
     <button onclick="limpiar()">🧹 Limpiar</button>
   </div>
 
   <div id="map"></div>
-
   <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -116,29 +118,26 @@
     }
 
     function colorPorPrioridad(prioridad) {
-      if (!prioridad) return 'gray';
-      switch (prioridad.toLowerCase()) {
-        case 'alta': return 'red';
-        case 'media': return 'orange';
-        case 'baja': return 'blue';
-        default: return 'gray';
+      switch ((prioridad || "").toLowerCase()) {
+        case "alta": return "red";
+        case "media": return "orange";
+        case "baja": return "blue";
+        default: return "gray";
       }
     }
 
     function mostrarClientes(centro, radio) {
       limpiar();
 
-      const estadoFiltro = document.getElementById("estado").value;
-      const prioridadFiltro = document.getElementById("prioridad").value;
-      const procesalFiltro = document.getElementById("procesal").value;
-      const contactabilidadFiltro = document.getElementById("contactabilidad").value;
+      const estadoFiltro = document.getElementById("estado").value.toLowerCase();
+      const prioridadFiltro = document.getElementById("prioridad").value.toLowerCase();
+      const procesalFiltro = document.getElementById("procesal").value.toLowerCase();
+      const contactabilidadFiltro = document.getElementById("contactabilidad").value.toLowerCase();
 
       let html = "<strong>Clientes cercanos:</strong>";
       let contador = 0;
 
       clientes.forEach(c => {
-        if (!c.latitud || !c.longitud) return;
-
         const dist = map.distance(centro, [c.latitud, c.longitud]);
         const coincide =
           (estadoFiltro === "todos" || c.estado === estadoFiltro) &&
@@ -147,8 +146,6 @@
           (contactabilidadFiltro === "todos" || c.contactabilidad === contactabilidadFiltro);
 
         if (dist <= radio && coincide) {
-          contador++;
-
           const icono = L.icon({
             iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorPorPrioridad(c.prioridad)}.png`,
             shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
@@ -158,10 +155,10 @@
             shadowSize: [41, 41]
           });
 
-          const marcador = L.marker([c.latitud, c.longitud], { icon: icono })
+          const marker = L.marker([c.latitud, c.longitud], { icon: icono })
             .addTo(map)
             .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`);
-          marcadores[c.id_deudor] = marcador;
+          marcadores[c.id_deudor] = marker;
 
           html += `
             <div class="cliente">
@@ -171,24 +168,17 @@
               <p><strong>Prioridad:</strong> ${c.prioridad || '–'}</p>
               <p><strong>Procesal:</strong> ${c.procesal || '–'}</p>
               <p><strong>Contactabilidad:</strong> ${c.contactabilidad || '–'}</p>
-              <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en mapa</button>
+              <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en el mapa</button>
             </div>`;
+          contador++;
         }
       });
 
       if (contador === 0) {
-        html += "<p>No se encontraron clientes dentro del radio.</p>";
+        html += "<p>No se encontraron resultados en el radio especificado.</p>";
       }
 
       document.getElementById("lista-clientes").innerHTML = html;
-    }
-
-    function centrarEnCliente(id) {
-      const marcador = marcadores[id];
-      if (marcador) {
-        map.setView(marcador.getLatLng(), 16);
-        marcador.openPopup();
-      }
     }
 
     function dibujarCirculo(centro, radio) {
@@ -201,20 +191,26 @@
       }).addTo(map);
     }
 
+    function centrarEnCliente(id) {
+      const m = marcadores[id];
+      if (m) {
+        map.setView(m.getLatLng(), 16);
+        m.openPopup();
+      }
+    }
+
     function iniciarMapa() {
       navigator.geolocation.getCurrentPosition(pos => {
         const centro = [pos.coords.latitude, pos.coords.longitude];
-        const rango = parseInt(document.getElementById("rango").value);
+        const radio = parseInt(document.getElementById("rango").value);
 
         if (marcadorUsuario) map.removeLayer(marcadorUsuario);
         marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
 
         map.setView(centro, 14);
-        mostrarClientes(centro, rango);
-        dibujarCirculo(centro, rango);
-      }, () => {
-        alert("No se pudo obtener tu ubicación.");
-      });
+        mostrarClientes(centro, radio);
+        dibujarCirculo(centro, radio);
+      }, () => alert("No se pudo obtener tu ubicación."));
     }
 
     function reiniciarUbicacion() {
@@ -225,26 +221,25 @@
       document.getElementById(id).addEventListener("change", () => {
         if (marcadorUsuario) {
           const centro = marcadorUsuario.getLatLng();
-          const rango = parseInt(document.getElementById("rango").value);
-          mostrarClientes([centro.lat, centro.lng], rango);
-          dibujarCirculo([centro.lat, centro.lng], rango);
+          const radio = parseInt(document.getElementById("rango").value);
+          mostrarClientes([centro.lat, centro.lng], radio);
+          dibujarCirculo([centro.lat, centro.lng], radio);
         }
       });
     });
 
-    map.on("click", function (e) {
+    map.on("click", e => {
       const centro = [e.latlng.lat, e.latlng.lng];
-      const rango = parseInt(document.getElementById("rango").value);
+      const radio = parseInt(document.getElementById("rango").value);
 
       if (marcadorUsuario) map.removeLayer(marcadorUsuario);
       marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Ubicación seleccionada").openPopup();
 
-      mostrarClientes(centro, rango);
-      dibujarCirculo(centro, rango);
+      mostrarClientes(centro, radio);
+      dibujarCirculo(centro, radio);
     });
 
     iniciarMapa();
   </script>
-
 </body>
 </html>
