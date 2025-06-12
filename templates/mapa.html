@@ -14,12 +14,14 @@
       margin: 0;
       padding: 0;
     }
+
     #map {
       height: 65vh;
       margin: 10px auto;
       width: 95%;
       border-radius: 8px;
     }
+
     #filtros {
       width: 95%;
       margin: auto;
@@ -28,11 +30,13 @@
       align-items: center;
       gap: 10px;
     }
+
     #filtros select, #filtros button {
       padding: 4px;
       border-radius: 5px;
       border: none;
     }
+
     #lista-clientes {
       width: 95%;
       margin: auto;
@@ -40,12 +44,14 @@
       padding: 10px;
       border-radius: 8px;
     }
+
     .cliente {
       background: rgba(0,0,0,0.5);
       margin: 8px 0;
       padding: 10px;
       border-radius: 6px;
     }
+
     .cliente button {
       margin-top: 5px;
       padding: 6px;
@@ -73,15 +79,15 @@
     <label>Estado:</label>
     <select id="estado">
       <option value="todos">Todos</option>
-      <option value="activo">Activo</option>
-      <option value="no activo">No Activo</option>
+      <option value="activo">activo</option>
+      <option value="no activo">no activo</option>
     </select>
 
     <label>Prioridad:</label>
     <select id="prioridad">
       <option value="todos">Todos</option>
       {% for p in prioridades %}
-        <option value="{{ p }}">{{ p }}</option>
+        <option value="{{ p|lower }}">{{ p|lower }}</option>
       {% endfor %}
     </select>
 
@@ -100,12 +106,11 @@
   <div id="map"></div>
   <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
 
-  <!-- 🔎 Debug: ver datos desde backend -->
-  <script>console.log("CLIENTES CARGADOS:", {{ clientes | tojson | safe }});</script>
-
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     const clientes = {{ clientes | tojson | safe }};
+    console.log("CLIENTES CARGADOS:", clientes);
+
     const map = L.map('map').setView([-12.0464, -77.0428], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
@@ -138,14 +143,19 @@
       const procesalFiltro = document.getElementById("procesal").value;
 
       let html = "<strong>Clientes cercanos:</strong>";
+      let totalMostrados = 0;
+
       clientes.forEach(c => {
         const coincide =
-          (estadoFiltro === "todos" || c.estado === estadoFiltro) &&
-          (prioridadFiltro === "todos" || c.prioridad === prioridadFiltro) &&
+          (estadoFiltro === "todos" || c.estado?.toLowerCase() === estadoFiltro) &&
+          (prioridadFiltro === "todos" || c.prioridad?.toLowerCase() === prioridadFiltro) &&
           (procesalFiltro === "todos" || c.procesal === procesalFiltro);
 
         const dist = map.distance(centro, [c.latitud, c.longitud]);
+
         if (c.latitud && c.longitud && c.id_deudor && dist <= radio && coincide) {
+          totalMostrados++;
+
           const icono = L.icon({
             iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorPorPrioridad(c.prioridad)}.png`,
             shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
@@ -173,6 +183,7 @@
         }
       });
 
+      console.log("CLIENTES MOSTRADOS:", totalMostrados);
       document.getElementById("lista-clientes").innerHTML = html;
     }
 
