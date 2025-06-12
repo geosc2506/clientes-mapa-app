@@ -185,8 +185,18 @@
       navigator.geolocation.getCurrentPosition(pos => {
         const centro = [pos.coords.latitude, pos.coords.longitude];
         const rango = parseInt(document.getElementById("rango").value);
+
+        if (marcadorUsuario) map.removeLayer(marcadorUsuario);
+        if (circulo) map.removeLayer(circulo);
+
         marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
-        circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
+        circulo = L.circle(centro, {
+          radius: rango,
+          color: 'blue',
+          fillColor: '#3f51b5',
+          fillOpacity: 0.15
+        }).addTo(map);
+
         map.setView(centro, 14);
         mostrarClientes(centro, rango);
       }, () => {
@@ -204,6 +214,13 @@
         if (marcadorUsuario) {
           const centro = marcadorUsuario.getLatLng();
           const rango = parseInt(document.getElementById("rango").value);
+          if (circulo) map.removeLayer(circulo);
+          circulo = L.circle(centro, {
+            radius: rango,
+            color: 'blue',
+            fillColor: '#3f51b5',
+            fillOpacity: 0.15
+          }).addTo(map);
           mostrarClientes([centro.lat, centro.lng], rango);
         }
       });
