@@ -87,7 +87,7 @@
     <select id="prioridad">
       <option value="todos">Todos</option>
       {% for p in prioridades %}
-        <option value="{{ p|lower }}">{{ p }}</option>
+        <option value="{{ p | lower | trim }}">{{ p }}</option>
       {% endfor %}
     </select>
 
@@ -95,7 +95,7 @@
     <select id="procesal">
       <option value="todos">Todos</option>
       {% for p in procesales %}
-        <option value="{{ p }}">{{ p }}</option>
+        <option value="{{ p | lower | trim }}">{{ p }}</option>
       {% endfor %}
     </select>
 
@@ -125,7 +125,7 @@
 
     function colorPorPrioridad(prioridad) {
       if (!prioridad) return 'gray';
-      switch (prioridad.toLowerCase()) {
+      switch (prioridad.toLowerCase().trim()) {
         case 'alta': return 'red';
         case 'media': return 'orange';
         case 'baja': return 'blue';
@@ -141,54 +141,51 @@
       const procesalFiltro = document.getElementById("procesal").value;
 
       let html = "<strong>Clientes cercanos:</strong>";
-      let totalMostrados = 0;
-      let totalCerca = 0;
+      let mostrados = 0;
 
       clientes.forEach(c => {
-        const distancia = map.distance(centro, [c.latitud, c.longitud]);
-        if (c.latitud && c.longitud && distancia <= radio) {
-          totalCerca++;
+        const estado = (c.estado || "").toLowerCase().trim();
+        const prioridad = (c.prioridad || "").toLowerCase().trim();
+        const procesal = (c.procesal || "").toLowerCase().trim();
 
-          const coincide =
-            (estadoFiltro === "todos" || c.estado?.toLowerCase() === estadoFiltro) &&
-            (prioridadFiltro === "todos" || c.prioridad?.toLowerCase() === prioridadFiltro) &&
-            (procesalFiltro === "todos" || c.procesal === procesalFiltro);
+        const coincide =
+          (estadoFiltro === "todos" || estado === estadoFiltro) &&
+          (prioridadFiltro === "todos" || prioridad === prioridadFiltro) &&
+          (procesalFiltro === "todos" || procesal === procesalFiltro);
 
-          if (c.id_deudor && coincide) {
-            totalMostrados++;
+        const dist = map.distance(centro, [c.latitud, c.longitud]);
 
-            const icono = L.icon({
-              iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorPorPrioridad(c.prioridad)}.png`,
-              shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-              iconSize: [25, 41],
-              iconAnchor: [12, 41],
-              popupAnchor: [1, -34],
-              shadowSize: [41, 41]
-            });
+        if (c.latitud && c.longitud && c.id_deudor && dist <= radio && coincide) {
+          mostrados++;
+          const icono = L.icon({
+            iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorPorPrioridad(c.prioridad)}.png`,
+            shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+          });
 
-            const marcador = L.marker([c.latitud, c.longitud], { icon: icono })
-              .addTo(map)
-              .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`);
-            marcadores[c.id_deudor] = marcador;
+          const marcador = L.marker([c.latitud, c.longitud], { icon: icono })
+            .addTo(map)
+            .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`);
+          marcadores[c.id_deudor] = marcador;
 
-            html += `
-              <div class="cliente">
-                <h4>${c.nombre}</h4>
-                <p><strong>Dirección:</strong> ${c.direccion || ''} - ${c.distrito || ''}</p>
-                <p><strong>Estado:</strong> ${c.estado || '–'}</p>
-                <p><strong>Prioridad:</strong> ${c.prioridad || '–'}</p>
-                <p><strong>Procesal:</strong> ${c.procesal || '–'}</p>
-                <p><strong>Contactabilidad:</strong> ${c.contactabilidad || '–'}</p>
-                <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en mapa</button>
-              </div>`;
-          }
+          html += `
+            <div class="cliente">
+              <h4>${c.nombre}</h4>
+              <p><strong>Dirección:</strong> ${c.direccion || ''} - ${c.distrito || ''}</p>
+              <p><strong>Estado:</strong> ${c.estado || '–'}</p>
+              <p><strong>Prioridad:</strong> ${c.prioridad || '–'}</p>
+              <p><strong>Procesal:</strong> ${c.procesal || '–'}</p>
+              <p><strong>Contactabilidad:</strong> ${c.contactabilidad || '–'}</p>
+              <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en mapa</button>
+            </div>`;
         }
       });
 
-      console.log("CLIENTES CERCA (radio):", totalCerca);
-      console.log("CLIENTES MOSTRADOS (filtro):", totalMostrados);
-
       document.getElementById("lista-clientes").innerHTML = html;
+      console.log("CLIENTES MOSTRADOS:", mostrados);
     }
 
     function centrarEnCliente(id) {
