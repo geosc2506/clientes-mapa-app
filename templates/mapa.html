@@ -14,14 +14,12 @@
       margin: 0;
       padding: 0;
     }
-
     #map {
       height: 65vh;
       margin: 10px auto;
       width: 95%;
       border-radius: 8px;
     }
-
     #filtros {
       width: 95%;
       margin: auto;
@@ -30,13 +28,11 @@
       align-items: center;
       gap: 10px;
     }
-
     #filtros select, #filtros button {
       padding: 4px;
       border-radius: 5px;
       border: none;
     }
-
     #lista-clientes {
       width: 95%;
       margin: auto;
@@ -44,14 +40,12 @@
       padding: 10px;
       border-radius: 8px;
     }
-
     .cliente {
       background: rgba(0,0,0,0.5);
       margin: 8px 0;
       padding: 10px;
       border-radius: 6px;
     }
-
     .cliente button {
       margin-top: 5px;
       padding: 6px;
@@ -71,7 +65,7 @@
     <label>Buscar dentro de:</label>
     <select id="rango">
       <option value="500">500 metros</option>
-      <option value="1000">1 km</option>
+      <option value="1000" selected>1 km</option>
       <option value="2000">2 km</option>
       <option value="5000">5 km</option>
     </select>
@@ -79,15 +73,15 @@
     <label>Estado:</label>
     <select id="estado">
       <option value="todos">Todos</option>
-      <option value="activo">Activo</option>
-      <option value="no activo">No activo</option>
+      <option value="Activo">Activo</option>
+      <option value="No Activo">No Activo</option>
     </select>
 
     <label>Prioridad:</label>
     <select id="prioridad">
       <option value="todos">Todos</option>
       {% for p in prioridades %}
-        <option value="{{ p|lower }}">{{ p }}</option>
+        <option value="{{ p }}">{{ p }}</option>
       {% endfor %}
     </select>
 
@@ -95,7 +89,7 @@
     <select id="procesal">
       <option value="todos">Todos</option>
       {% for p in procesales %}
-        <option value="{{ p|lower }}">{{ p }}</option>
+        <option value="{{ p }}">{{ p }}</option>
       {% endfor %}
     </select>
 
@@ -136,18 +130,18 @@
     function mostrarClientes(centro, radio) {
       limpiar();
 
-      const estadoFiltro = document.getElementById("estado").value.toLowerCase();
-      const prioridadFiltro = document.getElementById("prioridad").value.toLowerCase();
-      const procesalFiltro = document.getElementById("procesal").value.toLowerCase();
+      const estadoFiltro = document.getElementById("estado").value;
+      const prioridadFiltro = document.getElementById("prioridad").value;
+      const procesalFiltro = document.getElementById("procesal").value;
 
       let html = "<strong>Clientes cercanos:</strong>";
-
       clientes.forEach(c => {
-        const dist = map.distance(centro, [c.latitud, c.longitud]);
         const coincide =
-          (estadoFiltro === "todos" || (c.estado || '').toLowerCase() === estadoFiltro) &&
-          (prioridadFiltro === "todos" || (c.prioridad || '').toLowerCase() === prioridadFiltro) &&
-          (procesalFiltro === "todos" || (c.procesal || '').toLowerCase() === procesalFiltro);
+          (estadoFiltro === "todos" || c.estado === estadoFiltro) &&
+          (prioridadFiltro === "todos" || c.prioridad === prioridadFiltro) &&
+          (procesalFiltro === "todos" || c.procesal === procesalFiltro);
+
+        const dist = map.distance(centro, [c.latitud, c.longitud]);
 
         if (c.latitud && c.longitud && c.id_deudor && dist <= radio && coincide) {
           const icono = L.icon({
