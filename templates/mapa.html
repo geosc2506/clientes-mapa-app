@@ -108,7 +108,14 @@
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    const clientes = {{ clientes | tojson | safe }};
+    let clientes = [];
+    try {
+      clientes = {{ clientes | tojson | safe }};
+      console.log("✅ Clientes cargados:", clientes.length);
+    } catch (error) {
+      console.error("❌ Error cargando clientes:", error);
+    }
+
     const map = L.map('map').setView([-12.0464, -77.0428], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
