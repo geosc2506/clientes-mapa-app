@@ -4,7 +4,7 @@ import requests
 from io import StringIO
 
 app = Flask(__name__)
-app.secret_key = 'secreto123'  # Cambiar esto en producción
+app.secret_key = 'secreto123'  # Cambiar en producción
 
 # ====================================
 # 🔄 Función para obtener clientes CSV
@@ -17,7 +17,6 @@ def obtener_clientes():
 
         df = pd.read_csv(StringIO(response.text))
 
-        # Asegurar columnas clave
         columnas = ['nombre', 'direccion', 'latitud', 'longitud', 'distrito', 'telefono',
                     'estado', 'prioridad', 'procesal', 'contactabilidad', 'id deudor']
         for col in columnas:
@@ -26,12 +25,10 @@ def obtener_clientes():
 
         df.rename(columns={'id deudor': 'id_deudor'}, inplace=True)
 
-        # Convertir coordenadas
         df['latitud'] = pd.to_numeric(df['latitud'], errors='coerce')
         df['longitud'] = pd.to_numeric(df['longitud'], errors='coerce')
         df = df.dropna(subset=['latitud', 'longitud'])
 
-        # Normalizar valores para los filtros
         for col in ['estado', 'prioridad', 'procesal', 'contactabilidad']:
             df[col] = df[col].astype(str).str.strip().str.lower()
 
@@ -82,10 +79,9 @@ def dashboard():
 def mapa():
     if 'usuario' not in session:
         return redirect('/login')
-    
+
     clientes = obtener_clientes()
 
-    # Extraer valores únicos para filtros (ya están en minúsculas)
     prioridades = sorted(set(c['prioridad'] for c in clientes if c.get('prioridad')))
     procesales = sorted(set(c['procesal'] for c in clientes if c.get('procesal')))
     contactabilidades = sorted(set(c['contactabilidad'] for c in clientes if c.get('contactabilidad')))
