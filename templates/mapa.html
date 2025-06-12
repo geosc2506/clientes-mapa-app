@@ -27,10 +27,6 @@
       margin: auto;
     }
 
-    #filtros label, #filtros select {
-      margin-right: 10px;
-    }
-
     .cliente {
       background: rgba(0,0,0,0.4);
       margin: 8px 0;
@@ -51,45 +47,14 @@
 </head>
 <body>
 
-  <h2 style="text-align:center">📍 Mapa de Clientes (Lima, Perú)</h2>
+  <h2 style="text-align:center">📍 Mapa de Clientes</h2>
 
   <div id="filtros">
-    <label for="rango">Buscar dentro de:</label>
+    <label for="rango">Rango:</label>
     <select id="rango">
-      <option value="500">500 metros</option>
       <option value="1000">1 km</option>
       <option value="2000">2 km</option>
       <option value="5000">5 km</option>
-    </select>
-
-    <label for="estado">Estado:</label>
-    <select id="estado">
-      <option value="todos">Todos</option>
-      <option value="activo">Activo</option>
-      <option value="no activo">No activo</option>
-    </select>
-
-    <label for="prioridad">Prioridad:</label>
-    <select id="prioridad">
-      <option value="todos">Todos</option>
-      <option value="alta">Alta</option>
-      <option value="media">Media</option>
-      <option value="baja">Baja</option>
-    </select>
-
-    <label for="procesal">Procesal:</label>
-    <select id="procesal">
-      <option value="todos">Todos</option>
-      <option value="demanda presentada">Demanda presentada</option>
-      <option value="sentencia consentida">Sentencia consentida</option>
-    </select>
-
-    <label for="contactabilidad">Contactabilidad:</label>
-    <select id="contactabilidad">
-      <option value="todos">Todos</option>
-      <option value="contacto directo">Contacto directo</option>
-      <option value="contacto indirecto">Contacto indirecto</option>
-      <option value="no contacto">No contacto</option>
     </select>
   </div>
 
@@ -99,13 +64,12 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     const clientes = {{ clientes | tojson | safe }};
-
     const map = L.map('map').setView([-12.0464, -77.0428], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     let marcadorUsuario = null;
     let circulo = null;
-    let marcadores = {};
+    let marcadores = {}; // almacenará los marcadores por id
 
     function limpiar() {
       Object.values(marcadores).forEach(m => map.removeLayer(m));
@@ -116,22 +80,9 @@
     function mostrarClientes(centro, radio) {
       limpiar();
 
-      const filtroEstado = document.getElementById("estado").value;
-      const filtroPrioridad = document.getElementById("prioridad").value;
-      const filtroProcesal = document.getElementById("procesal").value;
-      const filtroContacto = document.getElementById("contactabilidad").value;
-
       let html = "<strong>Clientes cercanos:</strong>";
-
       clientes.forEach(c => {
-        const coincide =
-          c.latitud && c.longitud && c.id_deudor &&
-          (filtroEstado === "todos" || c.estado === filtroEstado) &&
-          (filtroPrioridad === "todos" || c.prioridad === filtroPrioridad) &&
-          (filtroProcesal === "todos" || c.procesal === filtroProcesal) &&
-          (filtroContacto === "todos" || c.contactabilidad === filtroContacto);
-
-        if (coincide) {
+        if (c.latitud && c.longitud && c.id_deudor) {
           const dist = map.distance(centro, [c.latitud, c.longitud]);
           if (dist <= radio) {
             const marcador = L.marker([c.latitud, c.longitud])
@@ -143,10 +94,6 @@
               <div class="cliente">
                 <h4>${c.nombre}</h4>
                 <p>${c.direccion || ''} - ${c.distrito || ''}</p>
-                <p><strong>Estado:</strong> ${c.estado || ''}</p>
-                <p><strong>Prioridad:</strong> ${c.prioridad || ''}</p>
-                <p><strong>Procesal:</strong> ${c.procesal || ''}</p>
-                <p><strong>Contactabilidad:</strong> ${c.contactabilidad || ''}</p>
                 <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en mapa</button>
               </div>`;
           }
@@ -177,33 +124,14 @@
       });
     }
 
-    function reiniciarUbicacion() {
-      navigator.geolocation.getCurrentPosition(pos => {
-        const centro = [pos.coords.latitude, pos.coords.longitude];
+    document.getElementById("rango").addEventListener("change", () => {
+      if (marcadorUsuario) {
+        const centro = marcadorUsuario.getLatLng();
         const rango = parseInt(document.getElementById("rango").value);
-
-        if (marcadorUsuario) map.removeLayer(marcadorUsuario);
-        marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
-
         if (circulo) map.removeLayer(circulo);
         circulo = L.circle(centro, { radius: rango, color: 'blue', fillOpacity: 0.1 }).addTo(map);
-
-        map.setView(centro, 14);
-        mostrarClientes(centro, rango);
-      }, () => {
-        alert("No se pudo obtener tu ubicación.");
-      });
-    }
-
-    // Eventos para actualizar clientes al cambiar filtros
-    ["rango", "estado", "prioridad", "procesal", "contactabilidad"].forEach(id => {
-      document.getElementById(id).addEventListener("change", () => {
-        if (marcadorUsuario) {
-          const centro = marcadorUsuario.getLatLng();
-          const rango = parseInt(document.getElementById("rango").value);
-          mostrarClientes([centro.lat, centro.lng], rango);
-        }
-      });
+        mostrarClientes([centro.lat, centro.lng], rango);
+      }
     });
 
     iniciarMapa();
