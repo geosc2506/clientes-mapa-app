@@ -17,12 +17,21 @@ def obtener_clientes():
 
         df = pd.read_csv(StringIO(response.text))
 
-        columnas = ['nombre', 'direccion', 'latitud', 'longitud', 'distrito', 'telefono', 'estado', 'prioridad', 'procesal', 'contactabilidad', 'id deudor']
+        columnas = [
+            'nombre', 'direccion', 'latitud', 'longitud', 'distrito',
+            'telefono', 'estado', 'prioridad', 'procesal',
+            'contactabilidad', 'id deudor'
+        ]
         for col in columnas:
             if col not in df.columns:
                 df[col] = ''
 
         df.rename(columns={'id deudor': 'id_deudor'}, inplace=True)
+
+        # Limpieza de texto: eliminar espacios y unificar formato
+        for c in df.columns:
+            if df[c].dtype == object:
+                df[c] = df[c].fillna('').astype(str).str.strip().str.title()
 
         df['latitud'] = pd.to_numeric(df['latitud'], errors='coerce')
         df['longitud'] = pd.to_numeric(df['longitud'], errors='coerce')
@@ -74,12 +83,15 @@ def mapa():
         return redirect('/login')
     
     clientes = obtener_clientes()
-
-    # 🔍 Extraer valores únicos desde los datos para los filtros
     prioridades = sorted(set(c['prioridad'] for c in clientes if c.get('prioridad')))
     procesales = sorted(set(c['procesal'] for c in clientes if c.get('procesal')))
 
-    return render_template('mapa.html', clientes=clientes, prioridades=prioridades, procesales=procesales)
+    return render_template(
+        'mapa.html',
+        clientes=clientes,
+        prioridades=prioridades,
+        procesales=procesales
+    )
 
 @app.route('/debug-clientes')
 def debug_clientes():
