@@ -3,102 +3,105 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📍 Mapa de clientes</title>
+  <title>Mapa de clientes</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #000;
+      background-color: black;
       color: white;
+      font-family: Arial, sans-serif;
     }
     #map {
-      height: 70vh;
-      width: 100%;
+      height: 500px;
+      margin-bottom: 10px;
     }
     #filtros {
-      background: #111;
-      padding: 10px;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
+      margin-bottom: 10px;
     }
     select, button {
-      padding: 5px;
-      border-radius: 4px;
-    }
-    #lista-clientes {
-      background: rgba(0,0,0,0.7);
-      padding: 10px;
+      padding: 4px;
+      border-radius: 5px;
     }
     .cliente {
-      background: rgba(255,255,255,0.05);
+      background-color: #111;
+      margin-bottom: 10px;
       padding: 10px;
-      margin: 8px 0;
       border-radius: 5px;
     }
     .cliente button {
       margin-top: 5px;
-      background: #3498db;
-      color: white;
+      background-color: #3498db;
       border: none;
+      color: white;
       padding: 5px 10px;
       border-radius: 3px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
+  <h3>📍 Mapa de clientes</h3>
+
   <div id="filtros">
-    <label>Radio:</label>
-    <select id="rango">
-      <option value="500">500 metros</option>
-      <option value="1000">1 kilómetro</option>
-      <option value="2000">2 kilómetros</option>
-    </select>
+    <label>Radio:
+      <select id="rango">
+        <option value="500">500 metros</option>
+        <option value="1000">1 kilómetro</option>
+        <option value="2000">2 kilómetros</option>
+      </select>
+    </label>
 
-    <label>Estado:</label>
-    <select id="estado">
-      <option value="todos">Todos</option>
-      <option value="activo">Activo</option>
-      <option value="no activo">No activo</option>
-    </select>
+    <label>Estado:
+      <select id="estado">
+        <option value="todos">Todos</option>
+        <option value="activo">Activo</option>
+        <option value="no activo">No activo</option>
+      </select>
+    </label>
 
-    <label>Prioridad:</label>
-    <select id="prioridad">
-      <option value="todos">Todos</option>
-      {% for p in prioridades %}
-        <option value="{{ p }}">{{ p }}</option>
-      {% endfor %}
-    </select>
+    <label>Prioridad:
+      <select id="prioridad">
+        <option value="todos">Todos</option>
+        {% for p in prioridades %}
+          <option value="{{ p }}">{{ p }}</option>
+        {% endfor %}
+      </select>
+    </label>
 
-    <label>Procesal:</label>
-    <select id="procesal">
-      <option value="todos">Todos</option>
-      {% for p in procesales %}
-        <option value="{{ p }}">{{ p }}</option>
-      {% endfor %}
-    </select>
+    <label>Procesal:
+      <select id="procesal">
+        <option value="todos">Todos</option>
+        {% for p in procesales %}
+          <option value="{{ p }}">{{ p }}</option>
+        {% endfor %}
+      </select>
+    </label>
 
-    <label>Contactabilidad:</label>
-    <select id="contactabilidad">
-      <option value="todos">Todos</option>
-      {% for c in contactabilidades %}
-        <option value="{{ c }}">{{ c }}</option>
-      {% endfor %}
-    </select>
+    <label>Contactabilidad:
+      <select id="contactabilidad">
+        <option value="todos">Todos</option>
+        {% for p in contactabilidades %}
+          <option value="{{ p }}">{{ p }}</option>
+        {% endfor %}
+      </select>
+    </label>
 
-    <button onclick="iniciarMapa()">📍 Mi ubicación</button>
+    <button onclick="reiniciarUbicacion()">📍 Mi ubicación</button>
     <button onclick="limpiar()">🧹 Limpiar</button>
   </div>
 
   <div id="map"></div>
+
   <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     const clientes = {{ clientes | tojson | safe }};
-    const map = L.map('map').setView([-12.04, -77.03], 13);
+    const map = L.map('map').setView([-12.0464, -77.0428], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     let marcadorUsuario = null;
@@ -112,13 +115,13 @@
       document.getElementById("lista-clientes").innerHTML = "<strong>Clientes cercanos:</strong>";
     }
 
-    function colorPorPrioridad(p) {
-      if (!p) return 'grey';
-      switch (p.toLowerCase()) {
+    function colorPorPrioridad(prioridad) {
+      if (!prioridad) return 'gray';
+      switch (prioridad.toLowerCase()) {
         case 'alta': return 'red';
         case 'media': return 'orange';
         case 'baja': return 'blue';
-        default: return 'grey';
+        default: return 'gray';
       }
     }
 
@@ -134,6 +137,8 @@
       let contador = 0;
 
       clientes.forEach(c => {
+        if (!c.latitud || !c.longitud) return;
+
         const dist = map.distance(centro, [c.latitud, c.longitud]);
         const coincide =
           (estadoFiltro === "todos" || c.estado === estadoFiltro) &&
@@ -142,6 +147,8 @@
           (contactabilidadFiltro === "todos" || c.contactabilidad === contactabilidadFiltro);
 
         if (dist <= radio && coincide) {
+          contador++;
+
           const icono = L.icon({
             iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorPorPrioridad(c.prioridad)}.png`,
             shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
@@ -159,18 +166,20 @@
           html += `
             <div class="cliente">
               <h4>${c.nombre}</h4>
-              <p><strong>Dirección:</strong> ${c.direccion} - ${c.distrito}</p>
-              <p><strong>Estado:</strong> ${c.estado}</p>
-              <p><strong>Prioridad:</strong> ${c.prioridad}</p>
-              <p><strong>Procesal:</strong> ${c.procesal}</p>
-              <p><strong>Contactabilidad:</strong> ${c.contactabilidad}</p>
-              <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en el mapa</button>
+              <p><strong>Dirección:</strong> ${c.direccion || ''} - ${c.distrito || ''}</p>
+              <p><strong>Estado:</strong> ${c.estado || '–'}</p>
+              <p><strong>Prioridad:</strong> ${c.prioridad || '–'}</p>
+              <p><strong>Procesal:</strong> ${c.procesal || '–'}</p>
+              <p><strong>Contactabilidad:</strong> ${c.contactabilidad || '–'}</p>
+              <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en mapa</button>
             </div>`;
-          contador++;
         }
       });
 
-      html += `<p><strong>Total:</strong> ${contador}</p>`;
+      if (contador === 0) {
+        html += "<p>No se encontraron clientes dentro del radio.</p>";
+      }
+
       document.getElementById("lista-clientes").innerHTML = html;
     }
 
@@ -188,48 +197,54 @@
         radius: radio,
         color: 'blue',
         fillColor: '#3f51b5',
-        fillOpacity: 0.2
+        fillOpacity: 0.15
       }).addTo(map);
     }
 
     function iniciarMapa() {
       navigator.geolocation.getCurrentPosition(pos => {
         const centro = [pos.coords.latitude, pos.coords.longitude];
-        const radio = parseInt(document.getElementById("rango").value);
+        const rango = parseInt(document.getElementById("rango").value);
 
         if (marcadorUsuario) map.removeLayer(marcadorUsuario);
         marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
-        map.setView(centro, 15);
-        mostrarClientes(centro, radio);
-        dibujarCirculo(centro, radio);
+
+        map.setView(centro, 14);
+        mostrarClientes(centro, rango);
+        dibujarCirculo(centro, rango);
       }, () => {
-        alert("No se pudo obtener la ubicación.");
+        alert("No se pudo obtener tu ubicación.");
       });
+    }
+
+    function reiniciarUbicacion() {
+      iniciarMapa();
     }
 
     ["rango", "estado", "prioridad", "procesal", "contactabilidad"].forEach(id => {
       document.getElementById(id).addEventListener("change", () => {
         if (marcadorUsuario) {
           const centro = marcadorUsuario.getLatLng();
-          const radio = parseInt(document.getElementById("rango").value);
-          mostrarClientes([centro.lat, centro.lng], radio);
-          dibujarCirculo([centro.lat, centro.lng], radio);
+          const rango = parseInt(document.getElementById("rango").value);
+          mostrarClientes([centro.lat, centro.lng], rango);
+          dibujarCirculo([centro.lat, centro.lng], rango);
         }
       });
     });
 
-    map.on("click", e => {
+    map.on("click", function (e) {
       const centro = [e.latlng.lat, e.latlng.lng];
-      const radio = parseInt(document.getElementById("rango").value);
+      const rango = parseInt(document.getElementById("rango").value);
 
       if (marcadorUsuario) map.removeLayer(marcadorUsuario);
       marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Ubicación seleccionada").openPopup();
 
-      mostrarClientes(centro, radio);
-      dibujarCirculo(centro, radio);
+      mostrarClientes(centro, rango);
+      dibujarCirculo(centro, rango);
     });
 
     iniciarMapa();
   </script>
+
 </body>
 </html>
