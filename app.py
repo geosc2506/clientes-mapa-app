@@ -6,10 +6,6 @@ from io import StringIO
 app = Flask(__name__)
 app.secret_key = 'secreto123'  # Usa una clave segura en producción
 
-# Credenciales básicas
-USUARIO = 'geo'
-CLAVE = 'akira'
-
 # =======================
 # 🔄 Obtener clientes CSV
 # =======================
@@ -21,17 +17,15 @@ def obtener_clientes():
 
         df = pd.read_csv(StringIO(response.text))
 
-        # Asegurar columnas mínimas
-        columnas = ['nombre', 'direccion', 'latitud', 'longitud', 'distrito', 'telefono']
+        columnas = ['nombre', 'direccion', 'latitud', 'longitud', 'distrito', 'telefono', 'estado', 'prioridad', 'procesal', 'contactabilidad', 'id deudor']
         for col in columnas:
             if col not in df.columns:
                 df[col] = ''
 
-        # Convertir coordenadas
+        df.rename(columns={'id deudor': 'id_deudor'}, inplace=True)
+
         df['latitud'] = pd.to_numeric(df['latitud'], errors='coerce')
         df['longitud'] = pd.to_numeric(df['longitud'], errors='coerce')
-
-        # Filtrar filas válidas
         df = df.dropna(subset=['latitud', 'longitud'])
 
         return df.to_dict(orient='records')
@@ -43,6 +37,9 @@ def obtener_clientes():
 # ========================
 # 🔐 Sistema de autenticación
 # ========================
+USUARIO = 'geo'
+CLAVE = 'akira'
+
 @app.route('/')
 def index():
     if 'usuario' in session:
@@ -71,19 +68,19 @@ def dashboard():
         return redirect('/login')
     return render_template('dashboard.html', usuario=session['usuario'])
 
-# ========================
-# 🗺 Ruta principal del mapa
-# ========================
 @app.route('/mapa')
 def mapa():
     if 'usuario' not in session:
         return redirect('/login')
+    
     clientes = obtener_clientes()
-    return render_template('mapa.html', clientes=clientes)
 
-# ================================
-# 🧪 Ruta extra para depuración JSON
-# ================================
+    # 🔍 Extraer valores únicos desde los datos para los filtros
+    prioridades = sorted(set(c['prioridad'] for c in clientes if c.get('prioridad')))
+    procesales = sorted(set(c['procesal'] for c in clientes if c.get('procesal')))
+
+    return render_template('mapa.html', clientes=clientes, prioridades=prioridades, procesales=procesales)
+
 @app.route('/debug-clientes')
 def debug_clientes():
     clientes = obtener_clientes()
