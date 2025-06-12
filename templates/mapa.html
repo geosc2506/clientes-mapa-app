@@ -3,58 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mapa de clientes</title>
+  <title>Mapa de Clientes</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
       background-image: url("/static/images/fondo-cubos.jpg");
       background-size: cover;
+      font-family: Arial, sans-serif;
       color: white;
+      margin: 0;
+      padding: 0;
     }
-
     #map {
       height: 65vh;
       width: 95%;
-      margin: 0 auto;
-      border-radius: 10px;
+      margin: 10px auto;
+      border-radius: 8px;
     }
-
     #filtros {
       width: 95%;
-      margin: 10px auto;
+      margin: auto;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       align-items: center;
     }
-
     #filtros select, #filtros button {
-      padding: 5px;
-      border-radius: 5px;
+      padding: 4px;
+      border-radius: 4px;
       border: none;
     }
-
     #lista-clientes {
       width: 95%;
-      margin: 10px auto;
-      background-color: rgba(0, 0, 0, 0.6);
-      border-radius: 8px;
+      margin: auto;
+      background: rgba(0, 0, 0, 0.4);
       padding: 10px;
+      border-radius: 8px;
     }
-
     .cliente {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 8px;
-      margin-bottom: 10px;
+      background: rgba(0,0,0,0.5);
+      margin: 8px 0;
+      padding: 10px;
       border-radius: 6px;
     }
-
     .cliente button {
       margin-top: 5px;
       padding: 6px;
-      background-color: #3498db;
+      background: #3498db;
       color: white;
       border: none;
       border-radius: 4px;
@@ -63,6 +58,7 @@
   </style>
 </head>
 <body>
+
   <h3 style="text-align: center;">📍 Mapa de clientes</h3>
 
   <div id="filtros">
@@ -71,7 +67,6 @@
       <option value="500">500 metros</option>
       <option value="1000">1 kilómetro</option>
       <option value="2000">2 kilómetros</option>
-      <option value="5000">5 kilómetros</option>
     </select>
 
     <label>Estado:</label>
@@ -85,7 +80,7 @@
     <select id="prioridad">
       <option value="todos">Todos</option>
       {% for p in prioridades %}
-        <option value="{{ p }}">{{ p.title() }}</option>
+        <option value="{{ p }}">{{ p }}</option>
       {% endfor %}
     </select>
 
@@ -93,7 +88,7 @@
     <select id="procesal">
       <option value="todos">Todos</option>
       {% for p in procesales %}
-        <option value="{{ p }}">{{ p.title() }}</option>
+        <option value="{{ p }}">{{ p }}</option>
       {% endfor %}
     </select>
 
@@ -101,7 +96,7 @@
     <select id="contactabilidad">
       <option value="todos">Todos</option>
       {% for c in contactabilidades %}
-        <option value="{{ c }}">{{ c.title() }}</option>
+        <option value="{{ c }}">{{ c }}</option>
       {% endfor %}
     </select>
 
@@ -115,8 +110,8 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     const clientes = {{ clientes | tojson | safe }};
-    const map = L.map("map").setView([-12.0464, -77.0428], 13);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+    const map = L.map('map').setView([-12.05, -77.05], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     let marcadorUsuario = null;
     let circulo = null;
@@ -130,11 +125,13 @@
     }
 
     function colorPorPrioridad(prioridad) {
-      const p = prioridad?.toLowerCase();
-      if (p === "alta") return "red";
-      if (p === "media") return "orange";
-      if (p === "baja") return "blue";
-      return "gray";
+      if (!prioridad) return 'gray';
+      switch (prioridad.toLowerCase()) {
+        case 'alta': return 'red';
+        case 'media': return 'orange';
+        case 'baja': return 'blue';
+        default: return 'gray';
+      }
     }
 
     function mostrarClientes(centro, radio) {
@@ -146,57 +143,56 @@
       const contactabilidad = document.getElementById("contactabilidad").value.toLowerCase();
 
       let html = "<strong>Clientes cercanos:</strong>";
-      let encontrados = 0;
+      let total = 0;
 
       clientes.forEach(c => {
-        const dist = map.distance(centro, [c.latitud, c.longitud]);
-        const dentroDelRadio = dist <= radio;
-
         const coincide =
-          (estado === "todos" || c.estado?.toLowerCase() === estado) &&
-          (prioridad === "todos" || c.prioridad?.toLowerCase() === prioridad) &&
-          (procesal === "todos" || c.procesal?.toLowerCase() === procesal) &&
-          (contactabilidad === "todos" || c.contactabilidad?.toLowerCase() === contactabilidad);
+          (estado === "todos" || (c.estado || '').toLowerCase() === estado) &&
+          (prioridad === "todos" || (c.prioridad || '').toLowerCase() === prioridad) &&
+          (procesal === "todos" || (c.procesal || '').toLowerCase() === procesal) &&
+          (contactabilidad === "todos" || (c.contactabilidad || '').toLowerCase() === contactabilidad);
 
-        if (dentroDelRadio && coincide) {
-          encontrados++;
+        if (!coincide) return;
 
-          const icono = L.icon({
-            iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorPorPrioridad(c.prioridad)}.png`,
-            shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-          });
+        const distancia = map.distance(centro, [c.latitud, c.longitud]);
+        if (distancia > radio) return;
 
-          const marcador = L.marker([c.latitud, c.longitud], { icon: icono })
-            .addTo(map)
-            .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`);
-          marcadores[c.id_deudor] = marcador;
+        const icono = L.icon({
+          iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorPorPrioridad(c.prioridad)}.png`,
+          shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        });
 
-          html += `
-            <div class="cliente">
-              <h4>${c.nombre}</h4>
-              <p><strong>Dirección:</strong> ${c.direccion || ''} - ${c.distrito || ''}</p>
-              <p><strong>Estado:</strong> ${c.estado || '–'}</p>
-              <p><strong>Prioridad:</strong> ${c.prioridad || '–'}</p>
-              <p><strong>Procesal:</strong> ${c.procesal || '–'}</p>
-              <p><strong>Contactabilidad:</strong> ${c.contactabilidad || '–'}</p>
-              <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en el mapa</button>
-            </div>`;
-        }
+        const marker = L.marker([c.latitud, c.longitud], { icon: icono })
+          .addTo(map)
+          .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`);
+        marcadores[c.id_deudor] = marker;
+
+        html += `
+          <div class="cliente">
+            <h4>${c.nombre}</h4>
+            <p><strong>Dirección:</strong> ${c.direccion || ''} - ${c.distrito || ''}</p>
+            <p><strong>Estado:</strong> ${c.estado || '–'}</p>
+            <p><strong>Prioridad:</strong> ${c.prioridad || '–'}</p>
+            <p><strong>Procesal:</strong> ${c.procesal || '–'}</p>
+            <p><strong>Contactabilidad:</strong> ${c.contactabilidad || '–'}</p>
+            <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en el mapa</button>
+          </div>`;
+        total++;
       });
 
-      html += `<p><strong>Total: ${encontrados}</strong></p>`;
+      html += `<p><strong>Total: ${total}</strong></p>`;
       document.getElementById("lista-clientes").innerHTML = html;
     }
 
     function centrarEnCliente(id) {
-      const marcador = marcadores[id];
-      if (marcador) {
-        map.setView(marcador.getLatLng(), 16);
-        marcador.openPopup();
+      const marker = marcadores[id];
+      if (marker) {
+        map.setView(marker.getLatLng(), 16);
+        marker.openPopup();
       }
     }
 
@@ -206,7 +202,7 @@
         radius: radio,
         color: 'blue',
         fillColor: '#3f51b5',
-        fillOpacity: 0.2
+        fillOpacity: 0.15
       }).addTo(map);
     }
 
@@ -214,8 +210,10 @@
       navigator.geolocation.getCurrentPosition(pos => {
         const centro = [pos.coords.latitude, pos.coords.longitude];
         const radio = parseInt(document.getElementById("rango").value);
+
         if (marcadorUsuario) map.removeLayer(marcadorUsuario);
         marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
+
         map.setView(centro, 14);
         mostrarClientes(centro, radio);
         dibujarCirculo(centro, radio);
