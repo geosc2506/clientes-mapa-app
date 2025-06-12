@@ -165,7 +165,11 @@
           html += `
             <div class="cliente">
               <h4>${c.nombre}</h4>
-              <p>${c.direccion || ''} - ${c.distrito || ''}</p>
+              <p><strong>Dirección:</strong> ${c.direccion || ''} - ${c.distrito || ''}</p>
+              <p><strong>Estado:</strong> ${c.estado || '–'}</p>
+              <p><strong>Prioridad:</strong> ${c.prioridad || '–'}</p>
+              <p><strong>Procesal:</strong> ${c.procesal || '–'}</p>
+              <p><strong>Contactabilidad:</strong> ${c.contactabilidad || '–'}</p>
               <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en mapa</button>
             </div>`;
         }
@@ -223,7 +227,7 @@
       });
     });
 
-    // NUEVO: click manual para ubicar un nuevo punto y redibujar círculo
+    // Clic en el mapa para redibujar radio desde otro punto
     map.on("click", function (e) {
       const centro = [e.latlng.lat, e.latlng.lng];
       const rango = parseInt(document.getElementById("rango").value);
