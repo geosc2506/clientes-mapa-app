@@ -73,8 +73,8 @@
     <label>Estado:</label>
     <select id="estado">
       <option value="todos">Todos</option>
-      <option value="Activo">Activo</option>
-      <option value="No Activo">No Activo</option>
+      <option value="activo">Activo</option>
+      <option value="no activo">No Activo</option>
     </select>
 
     <label>Prioridad:</label>
@@ -99,6 +99,9 @@
 
   <div id="map"></div>
   <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
+
+  <!-- 🔎 Debug: ver datos desde backend -->
+  <script>console.log("CLIENTES CARGADOS:", {{ clientes | tojson | safe }});</script>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
@@ -142,7 +145,6 @@
           (procesalFiltro === "todos" || c.procesal === procesalFiltro);
 
         const dist = map.distance(centro, [c.latitud, c.longitud]);
-
         if (c.latitud && c.longitud && c.id_deudor && dist <= radio && coincide) {
           const icono = L.icon({
             iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorPorPrioridad(c.prioridad)}.png`,
