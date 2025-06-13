@@ -39,13 +39,30 @@
       margin-top: 5px;
       cursor: pointer;
     }
+    .top-bar {
+      margin: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logout-btn {
+      color: white;
+      background: #e53935;
+      padding: 6px 12px;
+      border-radius: 5px;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
 
-  <h3 style="margin: 10px;">📍 Mapa de clientes</h3>
+  <div class="top-bar">
+    <h3>📍 Mapa de clientes</h3>
+    <a href="/logout" class="logout-btn">Cerrar sesión</a>
+  </div>
 
   <div id="filtros">
+    <!-- Filtros -->
     <label>Radio:</label>
     <select id="rango">
       <option value="500">500 metros</option>
@@ -103,18 +120,13 @@
     let centroActual = [-12.0464, -77.0428];
 
     function limpiar() {
-      // 🧼 Eliminar todos los marcadores excepto el del usuario
       map.eachLayer(layer => {
         if (layer instanceof L.Marker && layer !== marcadorUsuario) {
           map.removeLayer(layer);
         }
       });
       marcadores = {};
-
-      // Eliminar círculo si existe
       if (circulo) map.removeLayer(circulo);
-
-      // Limpiar lista
       document.getElementById("lista-clientes").innerHTML = "<strong>Clientes cercanos:</strong>";
     }
 
