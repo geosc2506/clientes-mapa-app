@@ -25,33 +25,38 @@
     #filtros {
       margin: 10px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      align-items: center;
     }
 
     #filtros label {
-      margin-right: 5px;
+      font-size: 12px;
+      margin-bottom: 2px;
+      display: block;
     }
 
     #filtros select,
     #filtros button {
-      padding: 5px;
-      border-radius: 5px;
-      min-width: 120px;
-      max-width: 100%;
+      padding: 3px 6px;
+      font-size: 13px;
+      line-height: 1.1;
+      border-radius: 4px;
       width: 100%;
+      box-sizing: border-box;
+      min-height: 30px;
     }
 
     #filtros .botones {
       grid-column: span 2;
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+      gap: 6px;
     }
 
     #filtros .botones button {
-      flex: 1 1 45%;
-      font-size: 14px;
+      flex: 1 1 50%;
+      font-size: 13px;
+      padding: 5px 8px;
     }
 
     #lista-clientes {
@@ -94,29 +99,25 @@
       font-size: 14px;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 500px) {
       #filtros {
-        grid-template-columns: 1fr !important;
-      }
-
-      #filtros label {
-        font-size: 14px;
-        margin-bottom: 2px;
+        grid-template-columns: 1fr 1fr;
       }
 
       #filtros select,
       #filtros button {
-        width: 100%;
-        font-size: 15px;
+        font-size: 12px;
+        min-height: 28px;
       }
 
       #filtros .botones {
-        grid-column: auto;
         flex-direction: column;
+        gap: 4px;
       }
 
       #filtros .botones button {
         width: 100%;
+        font-size: 12px;
       }
 
       .logout-btn {
