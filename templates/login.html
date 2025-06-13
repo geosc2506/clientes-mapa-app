@@ -6,9 +6,6 @@
   <title>Login</title>
   <style>
     body {
-      background-image: url("{{ url_for('static', filename='images/fondo-cubos.jpg') }}");
-      background-size: cover;
-      background-position: center;
       margin: 0;
       padding: 0;
       height: 100vh;
@@ -16,27 +13,30 @@
       justify-content: center;
       align-items: center;
       font-family: Arial, sans-serif;
+      background: url("{{ url_for('static', filename='images/fondo-cubos.jpg') }}") no-repeat center center fixed;
+      background-size: cover;
+      background-color: #000;
     }
 
     .login-box {
-      background: rgba(255, 255, 255, 0.9);
-      padding: 30px 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+      background: rgba(255, 255, 255, 0.92);
+      padding: 30px 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
       width: 90%;
-      max-width: 320px;
+      max-width: 330px;
       text-align: center;
     }
 
     .login-box img {
-      width: 100px;
-      margin-bottom: 10px;
+      width: 80px;
+      margin-bottom: 15px;
     }
 
     h2 {
       margin-bottom: 20px;
       font-size: 22px;
-      color: #333;
+      color: #222;
     }
 
     label {
@@ -45,6 +45,7 @@
       font-weight: bold;
       font-size: 14px;
       text-align: left;
+      color: #333;
     }
 
     input[type="text"],
@@ -54,7 +55,7 @@
       margin-top: 5px;
       border: 1px solid #ccc;
       border-radius: 4px;
-      font-size: 16px;
+      font-size: 15px;
     }
 
     button {
@@ -64,7 +65,7 @@
       background-color: #007bff;
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: 5px;
       cursor: pointer;
       font-weight: bold;
       font-size: 16px;
@@ -77,9 +78,7 @@
 </head>
 <body>
   <div class="login-box">
-    <!-- ✅ Carga dinámica del logo -->
-    <img src="{{ url_for('static', filename='images/logo-geo.png') }}" alt="Logo GEO">
-    
+    <img src="{{ url_for('static', filename='images/logo-geo.png') }}" alt="Logo GEO" />
     <h2>Iniciar sesión</h2>
 
     <form method="post">
