@@ -26,7 +26,11 @@
       margin: 10px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 10px;
+    }
+
+    #filtros label {
+      display: none;
     }
 
     #filtros select,
@@ -35,10 +39,6 @@
       border-radius: 5px;
       font-size: 14px;
       height: 36px;
-    }
-
-    #filtros select option:first-child {
-      color: #888;
     }
 
     #lista-clientes {
@@ -112,61 +112,3 @@
     }
   </style>
 </head>
-<body>
-  <div class="top-bar">
-    <h3>📍 Mapa de clientes</h3>
-    <a href="/logout" class="logout-btn">Cerrar sesión</a>
-  </div>
-
-  <div id="filtros">
-    <select id="rango">
-      <option disabled selected>Radio</option>
-      <option value="500">500 metros</option>
-      <option value="1000">1 kilómetro</option>
-      <option value="2000">2 kilómetros</option>
-    </select>
-
-    <select id="estado">
-      <option disabled selected>Estado</option>
-      <option value="todos">Todos</option>
-      <option value="activo">Activo</option>
-      <option value="no activo">No activo</option>
-    </select>
-
-    <select id="prioridad">
-      <option disabled selected>Prioridad</option>
-      <option value="todos">Todos</option>
-      {% for p in prioridades %}
-      <option value="{{ p }}">{{ p }}</option>
-      {% endfor %}
-    </select>
-
-    <select id="procesal">
-      <option disabled selected>Procesal</option>
-      <option value="todos">Todos</option>
-      {% for p in procesales %}
-      <option value="{{ p }}">{{ p }}</option>
-      {% endfor %}
-    </select>
-
-    <select id="contactabilidad">
-      <option disabled selected>Contactabilidad</option>
-      <option value="todos">Todos</option>
-      {% for c in contactabilidades %}
-      <option value="{{ c }}">{{ c }}</option>
-      {% endfor %}
-    </select>
-
-    <button onclick="reiniciarUbicacion()">📍 Mi ubicación</button>
-    <button onclick="limpiar()">🪑 Limpiar</button>
-  </div>
-
-  <div id="map"></div>
-  <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
-
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script>
-    // (Pega aquí el bloque completo de JS que tenías antes, como se explicó anteriormente)
-  </script>
-</body>
-</html>
