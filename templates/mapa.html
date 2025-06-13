@@ -15,47 +15,59 @@
       background-size: cover;
       background-color: #000;
     }
- 
+
     #map {
       height: 65vh;
       margin: 10px;
       border-radius: 8px;
     }
- 
+
     #filtros {
       margin: 10px;
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 10px;
     }
- 
+
     #filtros label {
       margin-right: 5px;
     }
- 
+
     #filtros select,
     #filtros button {
       padding: 5px;
       border-radius: 5px;
       min-width: 120px;
       max-width: 100%;
-      flex: 1 1 auto;
+      width: 100%;
     }
- 
+
+    #filtros .botones {
+      grid-column: span 2;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    #filtros .botones button {
+      flex: 1 1 45%;
+      font-size: 14px;
+    }
+
     #lista-clientes {
       background: #111;
       padding: 15px;
       margin: 10px;
       border-radius: 8px;
     }
- 
+
     .cliente {
       background: #222;
       padding: 10px;
       margin-bottom: 10px;
       border-radius: 5px;
     }
- 
+
     .cliente button {
       background-color: #2196F3;
       color: white;
@@ -64,7 +76,7 @@
       margin-top: 5px;
       cursor: pointer;
     }
- 
+
     .top-bar {
       margin: 10px;
       display: flex;
@@ -72,7 +84,7 @@
       align-items: center;
       flex-wrap: wrap;
     }
- 
+
     .logout-btn {
       color: white;
       background: #e53935;
@@ -81,35 +93,43 @@
       text-decoration: none;
       font-size: 14px;
     }
- 
+
     @media (max-width: 600px) {
       #filtros {
-        flex-direction: column;
-        align-items: stretch;
+        grid-template-columns: 1fr !important;
       }
- 
+
       #filtros label {
         font-size: 14px;
         margin-bottom: 2px;
       }
- 
+
       #filtros select,
       #filtros button {
         width: 100%;
         font-size: 15px;
       }
- 
+
+      #filtros .botones {
+        grid-column: auto;
+        flex-direction: column;
+      }
+
+      #filtros .botones button {
+        width: 100%;
+      }
+
       .logout-btn {
         width: 100%;
         text-align: center;
         margin-top: 10px;
       }
- 
+
       .top-bar {
         flex-direction: column;
         align-items: flex-start;
       }
- 
+
       .top-bar h3 {
         font-size: 18px;
         margin-bottom: 5px;
@@ -118,12 +138,12 @@
   </style>
 </head>
 <body>
- 
+
   <div class="top-bar">
     <h3>📍 Mapa de clientes</h3>
     <a href="/logout" class="logout-btn">Cerrar sesión</a>
   </div>
- 
+
   <div id="filtros">
     <label>Radio:</label>
     <select id="rango">
@@ -131,14 +151,14 @@
       <option value="1000">1 kilómetro</option>
       <option value="2000">2 kilómetros</option>
     </select>
- 
+
     <label>Estado:</label>
     <select id="estado">
       <option value="todos">Todos</option>
       <option value="activo">Activo</option>
       <option value="no activo">No activo</option>
     </select>
- 
+
     <label>Prioridad:</label>
     <select id="prioridad">
       <option value="todos">Todos</option>
@@ -146,7 +166,7 @@
       <option value="{{ p }}">{{ p }}</option>
       {% endfor %}
     </select>
- 
+
     <label>Procesal:</label>
     <select id="procesal">
       <option value="todos">Todos</option>
@@ -154,7 +174,7 @@
       <option value="{{ p }}">{{ p }}</option>
       {% endfor %}
     </select>
- 
+
     <label>Contactabilidad:</label>
     <select id="contactabilidad">
       <option value="todos">Todos</option>
@@ -162,25 +182,27 @@
       <option value="{{ c }}">{{ c }}</option>
       {% endfor %}
     </select>
- 
-    <button onclick="reiniciarUbicacion()">📍 Mi ubicación</button>
-    <button onclick="limpiar()">🧹 Limpiar</button>
+
+    <div class="botones">
+      <button onclick="reiniciarUbicacion()">📍 Mi ubicación</button>
+      <button onclick="limpiar()">🧹 Limpiar</button>
+    </div>
   </div>
- 
+
   <div id="map"></div>
   <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
- 
+
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     const clientes = {{ clientes | tojson | safe }};
     const map = L.map('map').setView([-12.0464, -77.0428], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
- 
+
     let marcadorUsuario = null;
     let circulo = null;
     let marcadores = {};
     let centroActual = [-12.0464, -77.0428];
- 
+
     function limpiar() {
       map.eachLayer(layer => {
         if (layer instanceof L.Marker && layer !== marcadorUsuario) {
@@ -191,7 +213,7 @@
       if (circulo) map.removeLayer(circulo);
       document.getElementById("lista-clientes").innerHTML = "<strong>Clientes cercanos:</strong>";
     }
- 
+
     function colorPorPrioridad(prioridad) {
       switch ((prioridad || "").toLowerCase()) {
         case "alta": return 'red';
@@ -200,31 +222,31 @@
         default: return 'gray';
       }
     }
- 
+
     function mostrarClientes(centro, radio) {
       limpiar();
       centroActual = centro;
- 
+
       const estadoFiltro = document.getElementById("estado").value;
       const prioridadFiltro = document.getElementById("prioridad").value;
       const procesalFiltro = document.getElementById("procesal").value;
       const contactabilidadFiltro = document.getElementById("contactabilidad").value;
- 
+
       let html = "<strong>Clientes cercanos:</strong>";
       let contador = 0;
- 
+
       clientes.forEach(c => {
         const lat = Number(c.latitud);
         const lng = Number(c.longitud);
         if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
- 
+
         const dist = map.distance(centro, [lat, lng]);
         const coincide =
           (estadoFiltro === "todos" || (c.estado || "").toLowerCase() === estadoFiltro) &&
           (prioridadFiltro === "todos" || (c.prioridad || "").toLowerCase() === prioridadFiltro) &&
           (procesalFiltro === "todos" || (c.procesal || "").toLowerCase() === procesalFiltro) &&
           (contactabilidadFiltro === "todos" || (c.contactabilidad || "").toLowerCase() === contactabilidadFiltro);
- 
+
         if (dist <= radio && coincide) {
           try {
             const icono = L.icon({
@@ -235,12 +257,12 @@
               popupAnchor: [1, -34],
               shadowSize: [41, 41]
             });
- 
+
             const marker = L.marker([lat, lng], { icon: icono })
               .addTo(map)
               .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`);
             marcadores[c.id_deudor] = marker;
- 
+
             html += `
               <div class="cliente">
                 <b>${c.nombre}</b><br>
@@ -252,20 +274,19 @@
                 <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en el mapa</button>
               </div>`;
             contador++;
- 
           } catch (error) {
             console.warn("❌ No se pudo crear marcador para:", c.nombre, error);
           }
         }
       });
- 
+
       if (contador === 0) {
         html += "<p>Sin resultados dentro del radio.</p>";
       }
- 
+
       document.getElementById("lista-clientes").innerHTML = html;
     }
- 
+
     function centrarEnCliente(id) {
       const marcador = marcadores[id];
       if (marcador) {
@@ -273,7 +294,7 @@
         marcador.openPopup();
       }
     }
- 
+
     function dibujarCirculo(centro, radio) {
       if (circulo) map.removeLayer(circulo);
       circulo = L.circle(centro, {
@@ -283,7 +304,7 @@
         fillOpacity: 0.2
       }).addTo(map);
     }
- 
+
     function iniciarMapa() {
       navigator.geolocation.getCurrentPosition(pos => {
         const centro = [pos.coords.latitude, pos.coords.longitude];
@@ -297,11 +318,11 @@
         alert("No se pudo obtener tu ubicación.");
       });
     }
- 
+
     function reiniciarUbicacion() {
       iniciarMapa();
     }
- 
+
     ["rango", "estado", "prioridad", "procesal", "contactabilidad"].forEach(id => {
       document.getElementById(id).addEventListener("change", () => {
         const radio = parseInt(document.getElementById("rango").value);
@@ -309,7 +330,7 @@
         dibujarCirculo(centroActual, radio);
       });
     });
- 
+
     map.on("click", e => {
       const centro = [e.latlng.lat, e.latlng.lng];
       const radio = parseInt(document.getElementById("rango").value);
@@ -318,7 +339,7 @@
       mostrarClientes(centro, radio);
       dibujarCirculo(centro, radio);
     });
- 
+
     iniciarMapa();
   </script>
 </body>

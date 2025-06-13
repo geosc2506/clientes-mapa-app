@@ -82,9 +82,9 @@ def mapa():
 
     clientes = obtener_clientes()
 
-    prioridades = sorted(set(c['prioridad'] for c in clientes if c.get('prioridad')))
-    procesales = sorted(set(c['procesal'] for c in clientes if c.get('procesal')))
-    contactabilidades = sorted(set(c['contactabilidad'] for c in clientes if c.get('contactabilidad')))
+    prioridades = sorted(set(c['prioridad'].lower() for c in clientes if c.get('prioridad')))
+    procesales = sorted(set(c['procesal'].lower() for c in clientes if c.get('procesal')))
+    contactabilidades = sorted(set(c['contactabilidad'].lower() for c in clientes if c.get('contactabilidad')))
 
     return render_template(
         'mapa.html',
