@@ -103,9 +103,18 @@
     let centroActual = [-12.0464, -77.0428];
 
     function limpiar() {
-      Object.values(marcadores).forEach(m => map.removeLayer(m));
+      // 🧼 Eliminar todos los marcadores excepto el del usuario
+      map.eachLayer(layer => {
+        if (layer instanceof L.Marker && layer !== marcadorUsuario) {
+          map.removeLayer(layer);
+        }
+      });
       marcadores = {};
+
+      // Eliminar círculo si existe
       if (circulo) map.removeLayer(circulo);
+
+      // Limpiar lista
       document.getElementById("lista-clientes").innerHTML = "<strong>Clientes cercanos:</strong>";
     }
 
