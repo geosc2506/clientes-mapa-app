@@ -24,10 +24,26 @@
 
     #filtros {
       margin: 10px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    #filtros summary {
+      font-size: 16px;
+      font-weight: bold;
+      background: #222;
+      color: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #filtros[open] .contenedor-filtros {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 6px;
-      align-items: center;
+      padding: 10px;
     }
 
     #filtros label {
@@ -40,11 +56,10 @@
     #filtros button {
       padding: 3px 6px;
       font-size: 13px;
-      line-height: 1.1;
       border-radius: 4px;
+      min-height: 30px;
       width: 100%;
       box-sizing: border-box;
-      min-height: 30px;
     }
 
     #filtros .botones {
@@ -100,7 +115,7 @@
     }
 
     @media (max-width: 500px) {
-      #filtros {
+      #filtros[open] .contenedor-filtros {
         grid-template-columns: 1fr 1fr;
       }
 
@@ -117,7 +132,6 @@
 
       #filtros .botones button {
         width: 100%;
-        font-size: 12px;
       }
 
       .logout-btn {
@@ -145,50 +159,53 @@
     <a href="/logout" class="logout-btn">Cerrar sesión</a>
   </div>
 
-  <div id="filtros">
-    <label>Radio:</label>
-    <select id="rango">
-      <option value="500">500 metros</option>
-      <option value="1000">1 kilómetro</option>
-      <option value="2000">2 kilómetros</option>
-    </select>
+  <details id="filtros" open>
+    <summary>🔍 Filtros de búsqueda</summary>
+    <div class="contenedor-filtros">
+      <label>Radio:</label>
+      <select id="rango">
+        <option value="500">500 metros</option>
+        <option value="1000">1 kilómetro</option>
+        <option value="2000">2 kilómetros</option>
+      </select>
 
-    <label>Estado:</label>
-    <select id="estado">
-      <option value="todos">Todos</option>
-      <option value="activo">Activo</option>
-      <option value="no activo">No activo</option>
-    </select>
+      <label>Estado:</label>
+      <select id="estado">
+        <option value="todos">Todos</option>
+        <option value="activo">Activo</option>
+        <option value="no activo">No activo</option>
+      </select>
 
-    <label>Prioridad:</label>
-    <select id="prioridad">
-      <option value="todos">Todos</option>
-      {% for p in prioridades %}
-      <option value="{{ p }}">{{ p }}</option>
-      {% endfor %}
-    </select>
+      <label>Prioridad:</label>
+      <select id="prioridad">
+        <option value="todos">Todos</option>
+        {% for p in prioridades %}
+        <option value="{{ p }}">{{ p }}</option>
+        {% endfor %}
+      </select>
 
-    <label>Procesal:</label>
-    <select id="procesal">
-      <option value="todos">Todos</option>
-      {% for p in procesales %}
-      <option value="{{ p }}">{{ p }}</option>
-      {% endfor %}
-    </select>
+      <label>Procesal:</label>
+      <select id="procesal">
+        <option value="todos">Todos</option>
+        {% for p in procesales %}
+        <option value="{{ p }}">{{ p }}</option>
+        {% endfor %}
+      </select>
 
-    <label>Contactabilidad:</label>
-    <select id="contactabilidad">
-      <option value="todos">Todos</option>
-      {% for c in contactabilidades %}
-      <option value="{{ c }}">{{ c }}</option>
-      {% endfor %}
-    </select>
+      <label>Contactabilidad:</label>
+      <select id="contactabilidad">
+        <option value="todos">Todos</option>
+        {% for c in contactabilidades %}
+        <option value="{{ c }}">{{ c }}</option>
+        {% endfor %}
+      </select>
 
-    <div class="botones">
-      <button onclick="reiniciarUbicacion()">📍 Mi ubicación</button>
-      <button onclick="limpiar()">🧹 Limpiar</button>
+      <div class="botones">
+        <button onclick="reiniciarUbicacion()">📍 Mi ubicación</button>
+        <button onclick="limpiar()">🧹 Limpiar</button>
+      </div>
     </div>
-  </div>
+  </details>
 
   <div id="map"></div>
   <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
