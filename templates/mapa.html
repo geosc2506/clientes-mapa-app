@@ -7,12 +7,15 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     body {
-      background-color: #000;
-      color: #fff;
       margin: 0;
       padding: 0;
       font-family: Arial, sans-serif;
+      color: #fff;
+      background: url("/static/images/fondo-cubos.jpg") no-repeat center center fixed;
+      background-size: cover;
+      background-color: #000;
     }
+
     #map { height: 65vh; margin: 10px; border-radius: 8px; }
     #filtros { margin: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
     #filtros select, #filtros button {
@@ -62,7 +65,6 @@
   </div>
 
   <div id="filtros">
-    <!-- Filtros -->
     <label>Radio:</label>
     <select id="rango">
       <option value="500">500 metros</option>
