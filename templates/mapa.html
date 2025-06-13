@@ -84,11 +84,14 @@
 
     @media (max-width: 600px) {
       #filtros {
-        flex-direction: column;
-        align-items: stretch;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 10px;
       }
 
       #filtros label {
+        grid-column: span 2;
         font-size: 14px;
         margin-bottom: 2px;
       }
@@ -97,6 +100,18 @@
       #filtros button {
         width: 100%;
         font-size: 15px;
+      }
+
+      #filtros button {
+        grid-column: span 1;
+      }
+
+      #filtros button:nth-of-type(1) {
+        grid-column: 1;
+      }
+
+      #filtros button:nth-of-type(2) {
+        grid-column: 2;
       }
 
       .logout-btn {
@@ -252,7 +267,6 @@
                 <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en el mapa</button>
               </div>`;
             contador++;
-
           } catch (error) {
             console.warn("❌ No se pudo crear marcador para:", c.nombre, error);
           }
