@@ -100,6 +100,7 @@
     let marcadorUsuario = null;
     let circulo = null;
     let marcadores = {};
+    let centroActual = [-12.0464, -77.0428]; // valor por defecto
 
     function limpiar() {
       Object.values(marcadores).forEach(m => map.removeLayer(m));
@@ -119,6 +120,7 @@
 
     function mostrarClientes(centro, radio) {
       limpiar();
+      centroActual = centro; // actualizar centro actual global
 
       const estadoFiltro = document.getElementById("estado").value;
       const prioridadFiltro = document.getElementById("prioridad").value;
@@ -129,10 +131,11 @@
       let contador = 0;
 
       clientes.forEach(c => {
-        // Validación estricta de coordenadas
-        if (!c.latitud || !c.longitud || isNaN(c.latitud) || isNaN(c.longitud)) return;
+        const lat = Number(c.latitud);
+        const lng = Number(c.longitud);
+        if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
 
-        const dist = map.distance(centro, [c.latitud, c.longitud]);
+        const dist = map.distance(centro, [lat, lng]);
         const coincide =
           (estadoFiltro === "todos" || (c.estado || "").toLowerCase() === estadoFiltro) &&
           (prioridadFiltro === "todos" || (c.prioridad || "").toLowerCase() === prioridadFiltro) &&
@@ -151,7 +154,7 @@
             shadowSize: [41, 41]
           });
 
-          const marker = L.marker([c.latitud, c.longitud], { icon: icono })
+          const marker = L.marker([lat, lng], { icon: icono })
             .addTo(map)
             .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`);
           marcadores[c.id_deudor] = marker;
@@ -215,12 +218,9 @@
 
     ["rango", "estado", "prioridad", "procesal", "contactabilidad"].forEach(id => {
       document.getElementById(id).addEventListener("change", () => {
-        if (marcadorUsuario) {
-          const centro = marcadorUsuario.getLatLng();
-          const radio = parseInt(document.getElementById("rango").value);
-          mostrarClientes([centro.lat, centro.lng], radio);
-          dibujarCirculo([centro.lat, centro.lng], radio);
-        }
+        const radio = parseInt(document.getElementById("rango").value);
+        mostrarClientes(centroActual, radio);
+        dibujarCirculo(centroActual, radio);
       });
     });
 
