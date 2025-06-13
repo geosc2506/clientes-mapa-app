@@ -1,114 +1,325 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mapa de Clientes</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      color: #fff;
-      background: url("/static/images/fondo-cubos.jpg") no-repeat center center fixed;
-      background-size: cover;
-      background-color: #000;
-    }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa de Clientes</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      color: #fff;
+      background: url("/static/images/fondo-cubos.jpg") no-repeat center center fixed;
+      background-size: cover;
+      background-color: #000;
+    }
 
-    #map {
-      height: 65vh;
-      margin: 10px;
-      border-radius: 8px;
-    }
+    #map {
+      height: 65vh;
+      margin: 10px;
+      border-radius: 8px;
+    }
 
-    #filtros {
-      margin: 10px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
+    #filtros {
+      margin: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
 
-    #filtros label {
-      display: none;
-    }
+    #filtros label {
+      margin-right: 5px;
+    }
 
-    #filtros select,
-    #filtros button {
-      padding: 6px 8px;
-      border-radius: 5px;
-      font-size: 14px;
-      height: 36px;
-    }
+    #filtros select,
+    #filtros button {
+      padding: 5px;
+      border-radius: 5px;
+      min-width: 120px;
+      max-width: 100%;
+      flex: 1 1 auto;
+    }
 
-    #lista-clientes {
-      background: #111;
-      padding: 15px;
-      margin: 10px;
-      border-radius: 8px;
-    }
+    #lista-clientes {
+      background: #111;
+      padding: 15px;
+      margin: 10px;
+      border-radius: 8px;
+    }
 
-    .cliente {
-      background: #222;
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 5px;
-    }
+    .cliente {
+      background: #222;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
 
-    .cliente button {
-      background-color: #2196F3;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-top: 5px;
-      cursor: pointer;
-    }
+    .cliente button {
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      margin-top: 5px;
+      cursor: pointer;
+    }
 
-    .top-bar {
-      margin: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+    .top-bar {
+      margin: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
 
-    .logout-btn {
-      color: white;
-      background: #e53935;
-      padding: 6px 12px;
-      border-radius: 5px;
-      text-decoration: none;
-      font-size: 14px;
-    }
+    .logout-btn {
+      color: white;
+      background: #e53935;
+      padding: 6px 12px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 14px;
+    }
 
-    @media (max-width: 600px) {
-      #filtros {
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-      }
+    @media (max-width: 600px) {
+      #filtros {
+        flex-direction: column;
+        align-items: stretch;
+      }
 
-      #filtros select,
-      #filtros button {
-        font-size: 14px;
-        padding: 6px 8px;
-        height: 36px;
-      }
+      #filtros label {
+        font-size: 14px;
+        margin-bottom: 2px;
+      }
 
-      .logout-btn {
-        width: 100%;
-        text-align: center;
-        margin-top: 10px;
-      }
+      #filtros select,
+      #filtros button {
+        width: 100%;
+        font-size: 15px;
+      }
 
-      .top-bar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
+      .logout-btn {
+        width: 100%;
+        text-align: center;
+        margin-top: 10px;
+      }
 
-      .top-bar h3 {
-        font-size: 18px;
-        margin-bottom: 5px;
-      }
-    }
-  </style>
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .top-bar h3 {
+        font-size: 18px;
+        margin-bottom: 5px;
+      }
+    }
+  </style>
 </head>
+<body>
+
+  <div class="top-bar">
+    <h3>📍 Mapa de clientes</h3>
+    <a href="/logout" class="logout-btn">Cerrar sesión</a>
+  </div>
+
+  <div id="filtros">
+    <label>Radio:</label>
+    <select id="rango">
+      <option value="500">500 metros</option>
+      <option value="1000">1 kilómetro</option>
+      <option value="2000">2 kilómetros</option>
+    </select>
+
+    <label>Estado:</label>
+    <select id="estado">
+      <option value="todos">Todos</option>
+      <option value="activo">Activo</option>
+      <option value="no activo">No activo</option>
+    </select>
+
+    <label>Prioridad:</label>
+    <select id="prioridad">
+      <option value="todos">Todos</option>
+      {% for p in prioridades %}
+      <option value="{{ p }}">{{ p }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Procesal:</label>
+    <select id="procesal">
+      <option value="todos">Todos</option>
+      {% for p in procesales %}
+      <option value="{{ p }}">{{ p }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Contactabilidad:</label>
+    <select id="contactabilidad">
+      <option value="todos">Todos</option>
+      {% for c in contactabilidades %}
+      <option value="{{ c }}">{{ c }}</option>
+      {% endfor %}
+    </select>
+
+    <button onclick="reiniciarUbicacion()">📍 Mi ubicación</button>
+    <button onclick="limpiar()">🧹 Limpiar</button>
+  </div>
+
+  <div id="map"></div>
+  <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const clientes = {{ clientes | tojson | safe }};
+    const map = L.map('map').setView([-12.0464, -77.0428], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    let marcadorUsuario = null;
+    let circulo = null;
+    let marcadores = {};
+    let centroActual = [-12.0464, -77.0428];
+
+    function limpiar() {
+      map.eachLayer(layer => {
+        if (layer instanceof L.Marker && layer !== marcadorUsuario) {
+          map.removeLayer(layer);
+        }
+      });
+      marcadores = {};
+      if (circulo) map.removeLayer(circulo);
+      document.getElementById("lista-clientes").innerHTML = "<strong>Clientes cercanos:</strong>";
+    }
+
+    function colorPorPrioridad(prioridad) {
+      switch ((prioridad || "").toLowerCase()) {
+        case "alta": return 'red';
+        case "media": return 'orange';
+        case "baja": return 'blue';
+        default: return 'gray';
+      }
+    }
+
+    function mostrarClientes(centro, radio) {
+      limpiar();
+      centroActual = centro;
+
+      const estadoFiltro = document.getElementById("estado").value;
+      const prioridadFiltro = document.getElementById("prioridad").value;
+      const procesalFiltro = document.getElementById("procesal").value;
+      const contactabilidadFiltro = document.getElementById("contactabilidad").value;
+
+      let html = "<strong>Clientes cercanos:</strong>";
+      let contador = 0;
+
+      clientes.forEach(c => {
+        const lat = Number(c.latitud);
+        const lng = Number(c.longitud);
+        if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
+
+        const dist = map.distance(centro, [lat, lng]);
+        const coincide =
+          (estadoFiltro === "todos" || (c.estado || "").toLowerCase() === estadoFiltro) &&
+          (prioridadFiltro === "todos" || (c.prioridad || "").toLowerCase() === prioridadFiltro) &&
+          (procesalFiltro === "todos" || (c.procesal || "").toLowerCase() === procesalFiltro) &&
+          (contactabilidadFiltro === "todos" || (c.contactabilidad || "").toLowerCase() === contactabilidadFiltro);
+
+        if (dist <= radio && coincide) {
+          try {
+            const icono = L.icon({
+              iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorPorPrioridad(c.prioridad)}.png`,
+              shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+              popupAnchor: [1, -34],
+              shadowSize: [41, 41]
+            });
+
+            const marker = L.marker([lat, lng], { icon: icono })
+              .addTo(map)
+              .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`);
+            marcadores[c.id_deudor] = marker;
+
+            html += `
+              <div class="cliente">
+                <b>${c.nombre}</b><br>
+                <p><strong>Dirección:</strong> ${c.direccion || ''}, ${c.distrito || ''}</p>
+                <p><strong>Estado:</strong> ${c.estado || '-'}</p>
+                <p><strong>Prioridad:</strong> ${c.prioridad || '-'}</p>
+                <p><strong>Procesal:</strong> ${c.procesal || '-'}</p>
+                <p><strong>Contactabilidad:</strong> ${c.contactabilidad || '-'}</p>
+                <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en el mapa</button>
+              </div>`;
+            contador++;
+
+          } catch (error) {
+            console.warn("❌ No se pudo crear marcador para:", c.nombre, error);
+          }
+        }
+      });
+
+      if (contador === 0) {
+        html += "<p>Sin resultados dentro del radio.</p>";
+      }
+
+      document.getElementById("lista-clientes").innerHTML = html;
+    }
+
+    function centrarEnCliente(id) {
+      const marcador = marcadores[id];
+      if (marcador) {
+        map.setView(marcador.getLatLng(), 16);
+        marcador.openPopup();
+      }
+    }
+
+    function dibujarCirculo(centro, radio) {
+      if (circulo) map.removeLayer(circulo);
+      circulo = L.circle(centro, {
+        radius: radio,
+        color: 'blue',
+        fillColor: '#2196F3',
+        fillOpacity: 0.2
+      }).addTo(map);
+    }
+
+    function iniciarMapa() {
+      navigator.geolocation.getCurrentPosition(pos => {
+        const centro = [pos.coords.latitude, pos.coords.longitude];
+        const radio = parseInt(document.getElementById("rango").value);
+        if (marcadorUsuario) map.removeLayer(marcadorUsuario);
+        marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
+        map.setView(centro, 14);
+        mostrarClientes(centro, radio);
+        dibujarCirculo(centro, radio);
+      }, () => {
+        alert("No se pudo obtener tu ubicación.");
+      });
+    }
+
+    function reiniciarUbicacion() {
+      iniciarMapa();
+    }
+
+    ["rango", "estado", "prioridad", "procesal", "contactabilidad"].forEach(id => {
+      document.getElementById(id).addEventListener("change", () => {
+        const radio = parseInt(document.getElementById("rango").value);
+        mostrarClientes(centroActual, radio);
+        dibujarCirculo(centroActual, radio);
+      });
+    });
+
+    map.on("click", e => {
+      const centro = [e.latlng.lat, e.latlng.lng];
+      const radio = parseInt(document.getElementById("rango").value);
+      if (marcadorUsuario) map.removeLayer(marcadorUsuario);
+      marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Ubicación seleccionada").openPopup();
+      mostrarClientes(centro, radio);
+      dibujarCirculo(centro, radio);
+    });
+
+    iniciarMapa();
+  </script>
+</body>
+</html>
