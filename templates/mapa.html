@@ -16,24 +16,46 @@
       background-color: #000;
     }
 
-    #map { height: 65vh; margin: 10px; border-radius: 8px; }
-    #filtros { margin: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
-    #filtros select, #filtros button {
+    #map {
+      height: 65vh;
+      margin: 10px;
+      border-radius: 8px;
+    }
+
+    #filtros {
+      margin: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    #filtros label {
+      margin-right: 5px;
+    }
+
+    #filtros select,
+    #filtros button {
       padding: 5px;
       border-radius: 5px;
+      min-width: 120px;
+      max-width: 100%;
+      flex: 1 1 auto;
     }
+
     #lista-clientes {
       background: #111;
       padding: 15px;
       margin: 10px;
       border-radius: 8px;
     }
+
     .cliente {
       background: #222;
       padding: 10px;
       margin-bottom: 10px;
       border-radius: 5px;
     }
+
     .cliente button {
       background-color: #2196F3;
       color: white;
@@ -42,18 +64,56 @@
       margin-top: 5px;
       cursor: pointer;
     }
+
     .top-bar {
       margin: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
     }
+
     .logout-btn {
       color: white;
       background: #e53935;
       padding: 6px 12px;
       border-radius: 5px;
       text-decoration: none;
+      font-size: 14px;
+    }
+
+    @media (max-width: 600px) {
+      #filtros {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      #filtros label {
+        font-size: 14px;
+        margin-bottom: 2px;
+      }
+
+      #filtros select,
+      #filtros button {
+        width: 100%;
+        font-size: 15px;
+      }
+
+      .logout-btn {
+        width: 100%;
+        text-align: center;
+        margin-top: 10px;
+      }
+
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .top-bar h3 {
+        font-size: 18px;
+        margin-bottom: 5px;
+      }
     }
   </style>
 </head>
