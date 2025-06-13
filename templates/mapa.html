@@ -229,7 +229,16 @@
       });
       marcadores = {};
       if (circulo) map.removeLayer(circulo);
+
+      document.getElementById("rango").selectedIndex = 0;
+      document.getElementById("estado").value = "todos";
+      document.getElementById("prioridad").value = "todos";
+      document.getElementById("procesal").value = "todos";
+      document.getElementById("contactabilidad").value = "todos";
+
       document.getElementById("lista-clientes").innerHTML = "<strong>Clientes cercanos:</strong>";
+
+      reiniciarUbicacion();
     }
 
     function colorPorPrioridad(prioridad) {
