@@ -68,12 +68,6 @@
       gap: 6px;
     }
 
-    #filtros .botones button {
-      flex: 1 1 50%;
-      font-size: 13px;
-      padding: 5px 8px;
-    }
-
     #lista-clientes {
       background: #111;
       padding: 15px;
@@ -113,279 +107,235 @@
       text-decoration: none;
       font-size: 14px;
     }
-
-    @media (max-width: 500px) {
-      #filtros[open] .contenedor-filtros {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      #filtros select,
-      #filtros button {
-        font-size: 12px;
-        min-height: 28px;
-      }
-
-      #filtros .botones {
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      #filtros .botones button {
-        width: 100%;
-      }
-
-      .logout-btn {
-        width: 100%;
-        text-align: center;
-        margin-top: 10px;
-      }
-
-      .top-bar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .top-bar h3 {
-        font-size: 18px;
-        margin-bottom: 5px;
-      }
-    }
   </style>
 </head>
 <body>
 
-  <div class="top-bar">
-    <h3>📍 Mapa de clientes</h3>
-    <a href="/logout" class="logout-btn">Cerrar sesión</a>
-  </div>
+<div class="top-bar">
+  <h3>📍 Mapa de clientes</h3>
+  <a href="/logout" class="logout-btn">Cerrar sesión</a>
+</div>
 
-  <details id="filtros" open>
-    <summary>🔍 Filtros de búsqueda</summary>
-    <div class="contenedor-filtros">
-      <label>Radio:</label>
-      <select id="rango">
-        <option value="500">500 metros</option>
-        <option value="1000">1 kilómetro</option>
-        <option value="2000">2 kilómetros</option>
-      </select>
+<details id="filtros" open>
+  <summary>🔍 Filtros de búsqueda</summary>
+  <div class="contenedor-filtros">
+    <label>Radio:</label>
+    <select id="rango">
+      <option value="500">500 metros</option>
+      <option value="1000">1 kilómetro</option>
+      <option value="2000">2 kilómetros</option>
+    </select>
 
-      <label>Estado:</label>
-      <select id="estado">
-        <option value="todos">Todos</option>
-        <option value="activo">Activo</option>
-        <option value="no activo">No activo</option>
-      </select>
+    <label>Estado:</label>
+    <select id="estado">
+      <option value="todos">Todos</option>
+      <option value="activo">Activo</option>
+      <option value="no activo">No activo</option>
+    </select>
 
-      <label>Prioridad:</label>
-      <select id="prioridad">
-        <option value="todos">Todos</option>
-        {% for p in prioridades %}
-        <option value="{{ p }}">{{ p }}</option>
-        {% endfor %}
-      </select>
+    <label>Prioridad:</label>
+    <select id="prioridad">
+      <option value="todos">Todos</option>
+      {% for p in prioridades %}
+      <option value="{{ p }}">{{ p }}</option>
+      {% endfor %}
+    </select>
 
-      <label>Procesal:</label>
-      <select id="procesal">
-        <option value="todos">Todos</option>
-        {% for p in procesales %}
-        <option value="{{ p }}">{{ p }}</option>
-        {% endfor %}
-      </select>
+    <label>Procesal:</label>
+    <select id="procesal">
+      <option value="todos">Todos</option>
+      {% for p in procesales %}
+      <option value="{{ p }}">{{ p }}</option>
+      {% endfor %}
+    </select>
 
-      <label>Contactabilidad:</label>
-      <select id="contactabilidad">
-        <option value="todos">Todos</option>
-        {% for c in contactabilidades %}
-        <option value="{{ c }}">{{ c }}</option>
-        {% endfor %}
-      </select>
+    <label>Contactabilidad:</label>
+    <select id="contactabilidad">
+      <option value="todos">Todos</option>
+      {% for c in contactabilidades %}
+      <option value="{{ c }}">{{ c }}</option>
+      {% endfor %}
+    </select>
 
-      <label>Negocio:</label>
-      <select id="negocio">
-        <option value="todos">Todos</option>
-        {% for n in negocios %}
-        <option value="{{ n }}">{{ n }}</option>
-        {% endfor %}
-      </select>
+    <label>Negocio:</label>
+    <select id="negocio">
+      <option value="todos">Todos</option>
+      {% for n in negocios %}
+      <option value="{{ n }}">{{ n }}</option>
+      {% endfor %}
+    </select>
 
-      <div class="botones">
-        <button onclick="reiniciarUbicacion()">📍 Mi ubicación</button>
-        <button onclick="limpiar()">🧹 Limpiar</button>
-      </div>
+    <div class="botones">
+      <button onclick="reiniciarUbicacion()">📍 Mi ubicación</button>
+      <button onclick="limpiar()">🧹 Limpiar</button>
     </div>
-  </details>
+  </div>
+</details>
 
-  <div id="map"></div>
-  <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
+<div id="map"></div>
+<div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+const clientes = {{ clientes | tojson | safe }};
+const map = L.map('map').setView([-12.0464, -77.0428], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script>
-    const clientes = {{ clientes | tojson | safe }};
-    const map = L.map('map').setView([-12.0464, -77.0428], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+let marcadorUsuario = null;
+let circulo = null;
+let centroActual = [-12.0464, -77.0428];
 
-    let marcadorUsuario = null;
-    let circulo = null;
-    let marcadores = {};
-    let centroActual = [-12.0464, -77.0428];
-
-    function limpiar() {
-      map.eachLayer(layer => {
-        if (layer instanceof L.Marker && layer !== marcadorUsuario) {
-          map.removeLayer(layer);
-        }
-      });
-      marcadores = {};
-      if (circulo) map.removeLayer(circulo);
-
-      document.getElementById("rango").selectedIndex = 0;
-      document.getElementById("estado").value = "todos";
-      document.getElementById("prioridad").value = "todos";
-      document.getElementById("procesal").value = "todos";
-      document.getElementById("contactabilidad").value = "todos";
-      document.getElementById("negocio").value = "todos";
-
-      document.getElementById("lista-clientes").innerHTML = "<strong>Clientes cercanos:</strong>";
-
-      reiniciarUbicacion();
+function limpiar() {
+  map.eachLayer(layer => {
+    if (layer instanceof L.Marker && layer !== marcadorUsuario) {
+      map.removeLayer(layer);
     }
+  });
+  if (circulo) map.removeLayer(circulo);
 
-    function colorPorPrioridad(prioridad) {
-      switch ((prioridad || "").toLowerCase()) {
-        case "alta": return 'red';
-        case "media": return 'orange';
-        case "baja": return 'blue';
-        default: return 'gray';
+  document.getElementById("rango").selectedIndex = 0;
+  document.getElementById("estado").value = "todos";
+  document.getElementById("prioridad").value = "todos";
+  document.getElementById("procesal").value = "todos";
+  document.getElementById("contactabilidad").value = "todos";
+  document.getElementById("negocio").value = "todos";
+
+  document.getElementById("lista-clientes").innerHTML = "<strong>Clientes cercanos:</strong>";
+
+  reiniciarUbicacion();
+}
+
+function colorPorPrioridad(prioridad) {
+  switch ((prioridad || "").toLowerCase()) {
+    case "alta": return 'red';
+    case "media": return 'orange';
+    case "baja": return 'blue';
+    default: return 'gray';
+  }
+}
+
+function mostrarClientes(centro, radio) {
+  map.eachLayer(layer => {
+    if (layer instanceof L.Marker && layer !== marcadorUsuario) {
+      map.removeLayer(layer);
+    }
+  });
+  if (circulo) map.removeLayer(circulo);
+
+  centroActual = centro;
+
+  const estadoFiltro = document.getElementById("estado").value;
+  const prioridadFiltro = document.getElementById("prioridad").value;
+  const procesalFiltro = document.getElementById("procesal").value;
+  const contactabilidadFiltro = document.getElementById("contactabilidad").value;
+  const negocioFiltro = document.getElementById("negocio").value;
+
+  let html = "<strong>Clientes cercanos:</strong>";
+  let contador = 0;
+
+  clientes.forEach(c => {
+    const lat = Number(c.latitud);
+    const lng = Number(c.longitud);
+    if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
+
+    const dist = map.distance(centro, [lat, lng]);
+    const coincide =
+      (estadoFiltro === "todos" || (c.estado || "").toLowerCase() === estadoFiltro) &&
+      (prioridadFiltro === "todos" || (c.prioridad || "").toLowerCase() === prioridadFiltro) &&
+      (procesalFiltro === "todos" || (c.procesal || "").toLowerCase() === procesalFiltro) &&
+      (contactabilidadFiltro === "todos" || (c.contactabilidad || "").toLowerCase() === contactabilidadFiltro) &&
+      (negocioFiltro === "todos" || (c.negocio || "").toLowerCase() === negocioFiltro);
+
+    if (dist <= radio && coincide) {
+      try {
+        const icono = L.icon({
+          iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorPorPrioridad(c.prioridad)}.png`,
+          shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        });
+
+        const marker = L.marker([lat, lng], { icon: icono })
+          .addTo(map)
+          .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`);
+
+        html += `
+          <div class="cliente">
+            <b>${c.nombre}</b><br>
+            <p><strong>Dirección:</strong> ${c.direccion || ''}, ${c.distrito || ''}</p>
+            <p><strong>Prioridad:</strong> ${c.prioridad || '-'}</p>
+            <p><strong>Procesal:</strong> ${c.procesal || '-'}</p>
+            <p><strong>Contactabilidad:</strong> ${c.contactabilidad || '-'}</p>
+            <p><strong>Negocio:</strong> ${c.negocio || '-'}</p>
+            <p><strong>Asesor:</strong> ${c.asesor || '-'}</p>
+            <p><strong>Teléfono Asesor:</strong> ${c.nro_asesor || '-'}</p>
+            <button onclick="centrarEnCliente(${lat}, ${lng})">📍 Ver en el mapa</button>
+          </div>`;
+
+        contador++;
+      } catch (error) {
+        console.warn("❌ No se pudo crear marcador para:", c.nombre, error);
       }
     }
+  });
 
-    function mostrarClientes(centro, radio) {
-      map.eachLayer(layer => {
-        if (layer instanceof L.Marker && layer !== marcadorUsuario) {
-          map.removeLayer(layer);
-        }
-      });
-      marcadores = {};
-      if (circulo) map.removeLayer(circulo);
+  if (contador === 0) {
+    html += "<p>Sin resultados dentro del radio.</p>";
+  }
 
-      centroActual = centro;
+  document.getElementById("lista-clientes").innerHTML = html;
+  dibujarCirculo(centro, radio);
+}
 
-      const estadoFiltro = document.getElementById("estado").value;
-      const prioridadFiltro = document.getElementById("prioridad").value;
-      const procesalFiltro = document.getElementById("procesal").value;
-      const contactabilidadFiltro = document.getElementById("contactabilidad").value;
-      const negocioFiltro = document.getElementById("negocio").value;
+function centrarEnCliente(lat, lng) {
+  map.setView([lat, lng], 16);
+}
 
-      let html = "<strong>Clientes cercanos:</strong>";
-      let contador = 0;
+function dibujarCirculo(centro, radio) {
+  if (circulo) map.removeLayer(circulo);
+  circulo = L.circle(centro, {
+    radius: radio,
+    color: 'blue',
+    fillColor: '#2196F3',
+    fillOpacity: 0.2
+  }).addTo(map);
+}
 
-      clientes.forEach(c => {
-        const lat = Number(c.latitud);
-        const lng = Number(c.longitud);
-        if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
+function iniciarMapa() {
+  navigator.geolocation.getCurrentPosition(pos => {
+    const centro = [pos.coords.latitude, pos.coords.longitude];
+    const radio = parseInt(document.getElementById("rango").value);
+    if (marcadorUsuario) map.removeLayer(marcadorUsuario);
+    marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
+    map.setView(centro, 14);
+    mostrarClientes(centro, radio);
+  }, () => {
+    alert("No se pudo obtener tu ubicación.");
+  });
+}
 
-        const dist = map.distance(centro, [lat, lng]);
-        const coincide =
-          (estadoFiltro === "todos" || (c.estado || "").toLowerCase() === estadoFiltro) &&
-          (prioridadFiltro === "todos" || (c.prioridad || "").toLowerCase() === prioridadFiltro) &&
-          (procesalFiltro === "todos" || (c.procesal || "").toLowerCase() === procesalFiltro) &&
-          (contactabilidadFiltro === "todos" || (c.contactabilidad || "").toLowerCase() === contactabilidadFiltro) &&
-          (negocioFiltro === "todos" || (c.negocio || "").toLowerCase() === negocioFiltro);
+function reiniciarUbicacion() {
+  iniciarMapa();
+}
 
-        if (dist <= radio && coincide) {
-          try {
-            const icono = L.icon({
-              iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorPorPrioridad(c.prioridad)}.png`,
-              shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-              iconSize: [25, 41],
-              iconAnchor: [12, 41],
-              popupAnchor: [1, -34],
-              shadowSize: [41, 41]
-            });
+["rango", "estado", "prioridad", "procesal", "contactabilidad", "negocio"].forEach(id => {
+  document.getElementById(id).addEventListener("change", () => {
+    const radio = parseInt(document.getElementById("rango").value);
+    mostrarClientes(centroActual, radio);
+  });
+});
 
-            const marker = L.marker([lat, lng], { icon: icono })
-              .addTo(map)
-              .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`);
-            marcadores[c.id_deudor] = marker;
+map.on("click", e => {
+  const centro = [e.latlng.lat, e.latlng.lng];
+  const radio = parseInt(document.getElementById("rango").value);
+  if (marcadorUsuario) map.removeLayer(marcadorUsuario);
+  marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Ubicación seleccionada").openPopup();
+  mostrarClientes(centro, radio);
+});
 
-            html += `
-              <div class="cliente">
-                <b>${c.nombre}</b><br>
-                <p><strong>Dirección:</strong> ${c.direccion || ''}, ${c.distrito || ''}</p>
-                <p><strong>Estado:</strong> ${c.estado || '-'}</p>
-                <p><strong>Prioridad:</strong> ${c.prioridad || '-'}</p>
-                <p><strong>Procesal:</strong> ${c.procesal || '-'}</p>
-                <p><strong>Contactabilidad:</strong> ${c.contactabilidad || '-'}</p>
-                <p><strong>Negocio:</strong> ${c.negocio || '-'}</p>
-                <button onclick="centrarEnCliente('${c.id_deudor}')">📍 Ver en el mapa</button>
-              </div>`;
-            contador++;
-          } catch (error) {
-            console.warn("❌ No se pudo crear marcador para:", c.nombre, error);
-          }
-        }
-      });
+iniciarMapa();
+</script>
 
-      if (contador === 0) {
-        html += "<p>Sin resultados dentro del radio.</p>";
-      }
-
-      document.getElementById("lista-clientes").innerHTML = html;
-
-      dibujarCirculo(centro, radio);
-    }
-
-    function centrarEnCliente(id) {
-      const marcador = marcadores[id];
-      if (marcador) {
-        map.setView(marcador.getLatLng(), 16);
-        marcador.openPopup();
-      }
-    }
-
-    function dibujarCirculo(centro, radio) {
-      if (circulo) map.removeLayer(circulo);
-      circulo = L.circle(centro, {
-        radius: radio,
-        color: 'blue',
-        fillColor: '#2196F3',
-        fillOpacity: 0.2
-      }).addTo(map);
-    }
-
-    function iniciarMapa() {
-      navigator.geolocation.getCurrentPosition(pos => {
-        const centro = [pos.coords.latitude, pos.coords.longitude];
-        const radio = parseInt(document.getElementById("rango").value);
-        if (marcadorUsuario) map.removeLayer(marcadorUsuario);
-        marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
-        map.setView(centro, 14);
-        mostrarClientes(centro, radio);
-      }, () => {
-        alert("No se pudo obtener tu ubicación.");
-      });
-    }
-
-    function reiniciarUbicacion() {
-      iniciarMapa();
-    }
-
-    ["rango", "estado", "prioridad", "procesal", "contactabilidad", "negocio"].forEach(id => {
-      document.getElementById(id).addEventListener("change", () => {
-        const radio = parseInt(document.getElementById("rango").value);
-        mostrarClientes(centroActual, radio);
-      });
-    });
-
-    map.on("click", e => {
-      const centro = [e.latlng.lat, e.latlng.lng];
-      const radio = parseInt(document.getElementById("rango").value);
-      if (marcadorUsuario) map.removeLayer(marcadorUsuario);
-      marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Ubicación seleccionada").openPopup();
-      mostrarClientes(centro, radio);
-    });
-
-    iniciarMapa();
-  </script>
 </body>
 </html>

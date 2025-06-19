@@ -18,7 +18,8 @@ def obtener_clientes():
         df = pd.read_csv(StringIO(response.text))
 
         columnas = ['nombre', 'direccion', 'latitud', 'longitud', 'distrito', 'telefono',
-                    'estado', 'prioridad', 'procesal', 'contactabilidad', 'negocio', 'id deudor']
+                    'estado', 'prioridad', 'procesal', 'contactabilidad', 'negocio',
+                    'asesor', 'nro_asesor', 'id deudor']
         for col in columnas:
             if col not in df.columns:
                 df[col] = ''
@@ -29,7 +30,7 @@ def obtener_clientes():
         df['longitud'] = pd.to_numeric(df['longitud'], errors='coerce')
         df = df.dropna(subset=['latitud', 'longitud'])
 
-        for col in ['estado', 'prioridad', 'procesal', 'contactabilidad', 'negocio']:
+        for col in ['estado', 'prioridad', 'procesal', 'contactabilidad', 'negocio', 'asesor', 'nro_asesor']:
             df[col] = df[col].astype(str).str.strip().str.lower()
 
         return df.to_dict(orient='records')
