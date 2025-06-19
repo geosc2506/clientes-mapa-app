@@ -29,7 +29,6 @@ def obtener_clientes():
         df['longitud'] = pd.to_numeric(df['longitud'], errors='coerce')
         df = df.dropna(subset=['latitud', 'longitud'])
 
-        # Limpiar espacios y pasar todo a minúsculas
         for col in ['estado', 'prioridad', 'procesal', 'contactabilidad', 'negocio']:
             df[col] = df[col].astype(str).str.strip().str.lower()
 
@@ -85,6 +84,7 @@ def mapa():
 
     prioridades = sorted(set(c['prioridad'].lower() for c in clientes if c.get('prioridad')))
     procesales = sorted(set(c['procesal'].lower() for c in clientes if c.get('procesal')))
+    contactabilidades = sorted(set(c['contactabilidad'].lower() for c in clientes if c.get('contactabilidad')))
     negocios = sorted(set(c['negocio'].lower() for c in clientes if c.get('negocio')))
 
     return render_template(
@@ -92,6 +92,7 @@ def mapa():
         clientes=clientes,
         prioridades=prioridades,
         procesales=procesales,
+        contactabilidades=contactabilidades,
         negocios=negocios
     )
 
