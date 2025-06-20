@@ -212,11 +212,11 @@ function mostrarClientes(centro, radio) {
 
   centroActual = centro;
 
-  const estadoFiltro = document.getElementById("estado").value;
-  const prioridadFiltro = document.getElementById("prioridad").value;
-  const procesalFiltro = document.getElementById("procesal").value;
-  const contactabilidadFiltro = document.getElementById("contactabilidad").value;
-  const negocioFiltro = document.getElementById("negocio").value;
+  const estadoFiltro = document.getElementById("estado").value.toLowerCase();
+  const prioridadFiltro = document.getElementById("prioridad").value.toLowerCase();
+  const procesalFiltro = document.getElementById("procesal").value.toLowerCase();
+  const contactabilidadFiltro = document.getElementById("contactabilidad").value.toLowerCase();
+  const negocioFiltro = document.getElementById("negocio").value.toLowerCase();
 
   let html = "<strong>Clientes cercanos:</strong>";
   let contador = 0;
@@ -252,7 +252,7 @@ function mostrarClientes(centro, radio) {
         html += `
           <div class="cliente">
             <b>${c.nombre}</b><br>
-            <p><strong>ID Deudor:</strong> ${(c["id_deudor"] && c["id_deudor"].trim() !== '' ? c["id_deudor"] : 'Sin ID disponible')}</p>
+            <p><strong>ID Deudor:</strong> ${c.id_deudor ? c.id_deudor : 'Sin ID disponible'}</p>
             <p><strong>Dirección:</strong> ${c.direccion || ''}, ${c.distrito || ''}</p>
             <p><strong>Prioridad:</strong> ${c.prioridad || '-'}</p>
             <p><strong>Procesal:</strong> ${c.procesal || '-'}</p>
