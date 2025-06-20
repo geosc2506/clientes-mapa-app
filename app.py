@@ -17,14 +17,16 @@ def obtener_clientes():
 
         df = pd.read_csv(StringIO(response.text))
 
+        # Normalizar nombres de columnas: strip, espacios a guiones bajos, minúsculas
+        df.rename(columns=lambda x: x.strip().replace(" ", "_").lower(), inplace=True)
+
         columnas = ['nombre', 'direccion', 'latitud', 'longitud', 'distrito', 'telefono',
                     'estado', 'prioridad', 'procesal', 'contactabilidad', 'negocio',
-                    'asesor', 'nro_asesor', 'id deudor']
+                    'asesor', 'nro_asesor', 'id_deudor']
+
         for col in columnas:
             if col not in df.columns:
                 df[col] = ''
-
-        df.rename(columns={'id deudor': 'id_deudor'}, inplace=True)
 
         df['latitud'] = pd.to_numeric(df['latitud'], errors='coerce')
         df['longitud'] = pd.to_numeric(df['longitud'], errors='coerce')
