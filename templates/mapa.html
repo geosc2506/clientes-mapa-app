@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     :root {
-      --color-primario: #2563EB; /* azul Waflow */
+      --color-primario: #2563EB;
       --color-secundario: #155BB5;
       --color-fondo: #FFFFFF;
       --color-texto: #1E2530;
@@ -29,25 +29,19 @@
     }
 
     /* --- Scroll --- */
-    body::-webkit-scrollbar {
-      width: 10px;
-    }
-
-    body::-webkit-scrollbar-thumb {
-      background-color: rgba(0,0,0,0.2);
-      border-radius: 5px;
-    }
+    body::-webkit-scrollbar { width: 8px; }
+    body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 5px; }
 
     /* --- Botón volver arriba --- */
     #btn-volver-arriba {
       position: fixed;
-      bottom: 20px;
+      bottom: 15px;
       right: 15px;
       display: none;
-      background-color: var(--color-primario);
+      background: var(--color-primario);
       color: white;
       border: none;
-      padding: 10px 12px;
+      padding: 12px;
       border-radius: 50%;
       font-size: 18px;
       cursor: pointer;
@@ -55,62 +49,50 @@
       transition: opacity 0.3s;
     }
 
-    #btn-volver-arriba.show {
-      display: block;
-      opacity: 1;
-    }
+    #btn-volver-arriba.show { display: block; opacity: 1; }
 
     /* --- Aviso scroll --- */
     #aviso-scroll {
       position: fixed;
-      bottom: 60px;
+      bottom: 65px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(0, 0, 0, 0.6);
       color: white;
-      padding: 6px 14px;
+      padding: 5px 14px;
       border-radius: 20px;
       font-size: 13px;
       z-index: 9999;
       animation: blink 1.5s infinite;
     }
 
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
 
     /* --- Top bar --- */
     .top-bar {
       position: sticky;
       top: 0;
       z-index: 999;
-      background-color: var(--color-primario);
+      background: linear-gradient(90deg, #4F8FFB 0%, #155BB5 100%);
       color: #fff;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 16px;
-      border-bottom: 1px solid var(--color-secundario);
+      padding: 12px 16px;
     }
 
-    .top-bar h3 {
-      font-size: 16px;
-      margin: 0;
-    }
+    .top-bar h3 { margin: 0; font-size: 16px; }
 
     .logout-btn {
       background: #E53935;
       color: white;
       padding: 6px 12px;
-      border-radius: 4px;
+      border-radius: 5px;
       font-size: 14px;
       text-decoration: none;
     }
 
-    .logout-btn:hover {
-      background: #C62828;
-    }
+    .logout-btn:hover { background: #C62828; }
 
     /* --- Mapa --- */
     #map {
@@ -125,23 +107,23 @@
       background: var(--color-card);
       border: 1px solid var(--color-borde);
       border-radius: 8px;
-      overflow: hidden;
     }
 
     #filtros summary {
       font-size: 15px;
       font-weight: bold;
-      background: var(--color-primario);
+      background: linear-gradient(90deg, #4F8FFB 0%, #155BB5 100%);
       color: #fff;
       padding: 10px;
       cursor: pointer;
+      border-radius: 8px 8px 0 0;
     }
 
     #filtros[open] .contenedor-filtros {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 8px;
-      padding: 10px;
+      padding: 12px;
     }
 
     #filtros label {
@@ -149,15 +131,13 @@
       margin-bottom: 2px;
     }
 
-    #filtros select,
-    #filtros button {
+    #filtros select, #filtros button {
       padding: 8px 10px;
       font-size: 14px;
       border-radius: 4px;
       border: 1px solid var(--color-borde);
       background-color: #fff;
       color: var(--color-texto);
-      box-sizing: border-box;
       width: 100%;
     }
 
@@ -167,11 +147,9 @@
       cursor: pointer;
     }
 
-    #filtros button:hover {
-      background-color: var(--color-secundario);
-    }
+    #filtros button:hover { background-color: var(--color-secundario); }
 
-    /* --- Lista de clientes --- */
+    /* --- Lista clientes --- */
     #lista-clientes {
       background: var(--color-card);
       border: 1px solid var(--color-borde);
@@ -181,7 +159,7 @@
     }
 
     .cliente {
-      background: white;
+      background: #fff;
       border: 1px solid var(--color-borde);
       border-radius: 6px;
       padding: 10px;
@@ -191,7 +169,7 @@
 
     .cliente button {
       margin-top: 5px;
-      background-color: var(--color-primario);
+      background: var(--color-primario);
       color: white;
       padding: 6px 10px;
       border: none;
@@ -199,33 +177,18 @@
       cursor: pointer;
     }
 
-    .cliente button:hover {
-      background-color: var(--color-secundario);
-    }
+    .cliente button:hover { background: var(--color-secundario); }
 
-    /* --- Mobile adjustments --- */
+    /* --- Responsive --- */
     @media (max-width: 768px) {
-      #map {
-        height: 55vh;
-      }
-
-      #filtros[open] .contenedor-filtros {
-        grid-template-columns: 1fr;
-      }
-
-      .top-bar h3 {
-        font-size: 14px;
-      }
-
-      .logout-btn {
-        font-size: 13px;
-      }
+      #map { height: 55vh; }
+      #filtros[open] .contenedor-filtros { grid-template-columns: 1fr; }
+      .top-bar h3 { font-size: 14px; }
+      .logout-btn { font-size: 13px; }
     }
 
     @media (min-width: 769px) {
-      #aviso-scroll {
-        display: none;
-      }
+      #aviso-scroll { display: none; }
     }
   </style>
 </head>
@@ -305,6 +268,7 @@
 
 <!-- Lista de clientes -->
 <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
+
 <!-- Carga Leaflet -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
@@ -332,7 +296,6 @@ function limpiar() {
   document.getElementById("negocio").value = "todos";
 
   document.getElementById("lista-clientes").innerHTML = "<strong>Clientes cercanos:</strong>";
-
   reiniciarUbicacion();
 }
 
@@ -388,7 +351,7 @@ function mostrarClientes(centro, radio) {
           shadowSize: [41, 41]
         });
 
-        const marker = L.marker([lat, lng], { icon: icono })
+        L.marker([lat, lng], { icon: icono })
           .addTo(map)
           .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`);
 
@@ -408,7 +371,7 @@ function mostrarClientes(centro, radio) {
 
         contador++;
       } catch (error) {
-        console.warn("❌ No se pudo crear marcador para:", c.nombre, error);
+        console.warn("❌ Error en marcador:", c.nombre, error);
       }
     }
   });
@@ -469,21 +432,17 @@ map.on("click", e => {
 
 iniciarMapa();
 
-// --- Mostrar/Ocultar boton volver arriba y aviso scroll ---
-let scrollTimeout;
-
+// Botón volver arriba y scroll
 window.addEventListener('scroll', () => {
   const btn = document.getElementById('btn-volver-arriba');
   const aviso = document.getElementById('aviso-scroll');
 
-  // Mostrar botón si scroll > 300px
   if (window.scrollY > 300) {
     btn.classList.add('show');
   } else {
     btn.classList.remove('show');
   }
 
-  // Ocultar aviso si scroll > 100px
   if (window.scrollY > 100 && aviso) {
     aviso.style.display = 'none';
   }
