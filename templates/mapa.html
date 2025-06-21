@@ -135,12 +135,6 @@
       50% { opacity: 0.5; }
     }
 
-    /* Clase para ocultar elementos */
-    .oculto {
-      display: none !important;
-    }
-
-    /* Responsive */
     @media (min-width: 769px) {
       #aviso-scroll {
         display: none;
@@ -393,27 +387,14 @@ map.on("click", e => {
 iniciarMapa();
 </script>
 
-<!-- JS: Ocultar paneles al tocar el mapa -->
+<!-- JS: Ocultar aviso al hacer scroll -->
 <script>
-const elementosOcultables = [
-  document.getElementById("filtros"),
-  document.getElementById("lista-clientes"),
-  document.querySelector(".top-bar"),
-  document.getElementById("aviso-scroll")
-];
-
-map.getContainer().addEventListener("mousedown", ocultarPaneles);
-map.getContainer().addEventListener("mouseup", mostrarPaneles);
-map.getContainer().addEventListener("touchstart", ocultarPaneles);
-map.getContainer().addEventListener("touchend", mostrarPaneles);
-
-function ocultarPaneles() {
-  elementosOcultables.forEach(el => el && el.classList.add("oculto"));
-}
-
-function mostrarPaneles() {
-  elementosOcultables.forEach(el => el && el.classList.remove("oculto"));
-}
+window.addEventListener('scroll', function() {
+  const aviso = document.getElementById('aviso-scroll');
+  if (window.scrollY > 50 && aviso) {
+    aviso.style.display = 'none';
+  }
+});
 </script>
 
 </body>
