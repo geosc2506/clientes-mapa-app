@@ -1,401 +1,114 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mapa de Clientes</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <style>
-    html {
-      scrollbar-gutter: stable;
-    }
+from flask import Flask, render_template, request, redirect, session, jsonify
+import pandas as pd
+import requests
+from io import StringIO
 
-    body {
-      overflow-y: scroll;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      color: #fff;
-      background: url("/static/images/fondo-cubos.jpg") no-repeat center center fixed;
-      background-size: cover;
-      background-color: #000;
-    }
+app = Flask(__name__)
+app.secret_key = 'secreto123'  # Cambiar en producción
 
-    #map {
-      height: 65vh;
-      margin: 10px;
-      border-radius: 8px;
-    }
+# ====================================
+# 🔄 Función para obtener clientes CSV
+# ====================================
+def obtener_clientes():
+    try:
+        url = "https://docs.google.com/spreadsheets/d/1YCEuaC-E-pSPsT-VnitCDBT5cc5k_qh3_2wxtbTuCOs/export?format=csv"
+        response = requests.get(url)
+        response.raise_for_status()
 
-    #filtros {
-      margin: 10px;
-      background: rgba(0, 0, 0, 0.4);
-      border-radius: 8px;
-      overflow: hidden;
-    }
+        df = pd.read_csv(StringIO(response.text))
 
-    #filtros summary {
-      font-size: 16px;
-      font-weight: bold;
-      background: #222;
-      color: #fff;
-      padding: 10px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+        # Normalizar nombres de columnas: strip, espacios a guiones bajos, minúsculas
+        df.rename(columns=lambda x: x.strip().replace(" ", "_").lower(), inplace=True)
 
-    #filtros[open] .contenedor-filtros {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 6px;
-      padding: 10px;
-    }
+        columnas = ['nombre', 'direccion', 'latitud', 'longitud', 'distrito', 'telefono',
+                    'estado', 'prioridad', 'procesal', 'contactabilidad', 'negocio',
+                    'asesor', 'nro_asesor', 'id_deudor']
 
-    #filtros label {
-      font-size: 12px;
-      margin-bottom: 2px;
-      display: block;
-    }
+        for col in columnas:
+            if col not in df.columns:
+                df[col] = ''
 
-    #filtros select,
-    #filtros button {
-      padding: 3px 6px;
-      font-size: 13px;
-      border-radius: 4px;
-      min-height: 30px;
-      width: 100%;
-      box-sizing: border-box;
-    }
+        df['latitud'] = pd.to_numeric(df['latitud'], errors='coerce')
+        df['longitud'] = pd.to_numeric(df['longitud'], errors='coerce')
+        df = df.dropna(subset=['latitud', 'longitud'])
 
-    #filtros .botones {
-      grid-column: span 2;
-      display: flex;
-      gap: 6px;
-    }
+        for col in ['estado', 'prioridad', 'procesal', 'contactabilidad', 'negocio', 'asesor', 'nro_asesor']:
+            df[col] = df[col].astype(str).str.strip().str.lower()
 
-    #lista-clientes {
-      background: #111;
-      padding: 15px;
-      margin: 10px;
-      border-radius: 8px;
-    }
+        return df.to_dict(orient='records')
 
-    .cliente {
-      background: #222;
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 5px;
-    }
+    except Exception as e:
+        print("❌ Error al cargar clientes:", e)
+        return []
 
-    .cliente button {
-      background-color: #2196F3;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-top: 5px;
-      cursor: pointer;
-    }
+# ==============================
+# 🔐 Sistema de autenticación
+# ==============================
+USUARIO = 'geo'
+CLAVE = 'akira'
 
-    .top-bar {
-      margin: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+@app.route('/')
+def index():
+    if 'usuario' in session:
+        return redirect('/dashboard')
+    return redirect('/login')
 
-    .logout-btn {
-      color: white;
-      background: #e53935;
-      padding: 6px 12px;
-      border-radius: 5px;
-      text-decoration: none;
-      font-size: 14px;
-      margin-top: 5px;
-      margin-right: 5px;
-    }
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        usuario = request.form['usuario']
+        clave = request.form['clave']
+        if usuario == USUARIO and clave == CLAVE:
+            session['usuario'] = usuario
+            return redirect('/dashboard')
+        return 'Credenciales incorrectas'
+    return render_template('login.html')
 
-    /* Aviso "desliza para ver más" */
-    #aviso-scroll {
-      position: fixed;
-      bottom: 15px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      z-index: 9999;
-      animation: blink 1.5s infinite;
-    }
+@app.route('/logout')
+def logout():
+    session.pop('usuario', None)
+    return redirect('/login')
 
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
+@app.route('/dashboard')
+def dashboard():
+    if 'usuario' not in session:
+        return redirect('/login')
+    return render_template('dashboard.html', usuario=session['usuario'])
 
-    @media (min-width: 769px) {
-      #aviso-scroll {
-        display: none;
-      }
-    }
+# ====================================
+# 📍 Ruta principal del mapa
+# ====================================
+@app.route('/mapa')
+def mapa():
+    if 'usuario' not in session:
+        return redirect('/login')
 
-    @media (max-width: 768px) {
-      #map {
-        height: 50vh;
-      }
+    clientes = obtener_clientes()
 
-      .logout-btn {
-        margin-top: 8px;
-        margin-right: 8px;
-        font-size: 15px;
-      }
-    }
-  </style>
-</head>
-<body>
+    prioridades = sorted(set(c['prioridad'].lower() for c in clientes if c.get('prioridad')))
+    procesales = sorted(set(c['procesal'].lower() for c in clientes if c.get('procesal')))
+    contactabilidades = sorted(set(c['contactabilidad'].lower() for c in clientes if c.get('contactabilidad')))
+    negocios = sorted(set(c['negocio'].lower() for c in clientes if c.get('negocio')))
 
-<!-- Flechita de aviso -->
-<div id="aviso-scroll">⬇️ Desliza para ver más</div>
+    return render_template(
+        'mapa.html',
+        clientes=clientes,
+        prioridades=prioridades,
+        procesales=procesales,
+        contactabilidades=contactabilidades,
+        negocios=negocios
+    )
 
-<div class="top-bar">
-  <h3>📍 Mapa de clientes</h3>
-  <a href="/logout" class="logout-btn">Cerrar sesión</a>
-</div>
+# ===========================
+# 🧪 Ruta de depuración JSON
+# ===========================
+@app.route('/debug-clientes')
+def debug_clientes():
+    clientes = obtener_clientes()
+    return jsonify(clientes)
 
-<details id="filtros" open>
-  <summary>🔍 Filtros de búsqueda</summary>
-  <div class="contenedor-filtros">
-    <label>Radio:</label>
-    <select id="rango">
-      <option value="500">500 metros</option>
-      <option value="1000">1 kilómetro</option>
-      <option value="2000">2 kilómetros</option>
-    </select>
-
-    <label>Estado:</label>
-    <select id="estado">
-      <option value="todos">Todos</option>
-      <option value="activo">Activo</option>
-      <option value="no activo">No activo</option>
-    </select>
-
-    <label>Prioridad:</label>
-    <select id="prioridad">
-      <option value="todos">Todos</option>
-      {% for p in prioridades %}
-      <option value="{{ p }}">{{ p }}</option>
-      {% endfor %}
-    </select>
-
-    <label>Procesal:</label>
-    <select id="procesal">
-      <option value="todos">Todos</option>
-      {% for p in procesales %}
-      <option value="{{ p }}">{{ p }}</option>
-      {% endfor %}
-    </select>
-
-    <label>Contactabilidad:</label>
-    <select id="contactabilidad">
-      <option value="todos">Todos</option>
-      {% for c in contactabilidades %}
-      <option value="{{ c }}">{{ c }}</option>
-      {% endfor %}
-    </select>
-
-    <label>Negocio:</label>
-    <select id="negocio">
-      <option value="todos">Todos</option>
-      {% for n in negocios %}
-      <option value="{{ n }}">{{ n }}</option>
-      {% endfor %}
-    </select>
-
-    <div class="botones">
-      <button onclick="reiniciarUbicacion()">📍 Mi ubicación</button>
-      <button onclick="limpiar()">🧹 Limpiar</button>
-    </div>
-  </div>
-</details>
-
-<div id="map"></div>
-<div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
-
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script>
-const clientes = {{ clientes | tojson | safe }};
-const map = L.map('map').setView([-12.0464, -77.0428], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-let marcadorUsuario = null;
-let circulo = null;
-let centroActual = [-12.0464, -77.0428];
-
-function limpiar() {
-  map.eachLayer(layer => {
-    if (layer instanceof L.Marker && layer !== marcadorUsuario) {
-      map.removeLayer(layer);
-    }
-  });
-  if (circulo) map.removeLayer(circulo);
-
-  document.getElementById("rango").selectedIndex = 0;
-  document.getElementById("estado").value = "todos";
-  document.getElementById("prioridad").value = "todos";
-  document.getElementById("procesal").value = "todos";
-  document.getElementById("contactabilidad").value = "todos";
-  document.getElementById("negocio").value = "todos";
-
-  document.getElementById("lista-clientes").innerHTML = "<strong>Clientes cercanos:</strong>";
-
-  reiniciarUbicacion();
-}
-
-function colorPorPrioridad(prioridad) {
-  switch ((prioridad || "").toLowerCase()) {
-    case "alta": return 'red';
-    case "media": return 'orange';
-    case "baja": return 'blue';
-    default: return 'gray';
-  }
-}
-
-function mostrarClientes(centro, radio) {
-  map.eachLayer(layer => {
-    if (layer instanceof L.Marker && layer !== marcadorUsuario) {
-      map.removeLayer(layer);
-    }
-  });
-  if (circulo) map.removeLayer(circulo);
-
-  centroActual = centro;
-
-  const estadoFiltro = document.getElementById("estado").value.toLowerCase();
-  const prioridadFiltro = document.getElementById("prioridad").value.toLowerCase();
-  const procesalFiltro = document.getElementById("procesal").value.toLowerCase();
-  const contactabilidadFiltro = document.getElementById("contactabilidad").value.toLowerCase();
-  const negocioFiltro = document.getElementById("negocio").value.toLowerCase();
-
-  let html = "<strong>Clientes cercanos:</strong>";
-  let contador = 0;
-
-  clientes.forEach(c => {
-    const lat = Number(c.latitud);
-    const lng = Number(c.longitud);
-    if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
-
-    const dist = map.distance(centro, [lat, lng]);
-    const coincide =
-      (estadoFiltro === "todos" || (c.estado || "").toLowerCase() === estadoFiltro) &&
-      (prioridadFiltro === "todos" || (c.prioridad || "").toLowerCase() === prioridadFiltro) &&
-      (procesalFiltro === "todos" || (c.procesal || "").toLowerCase() === procesalFiltro) &&
-      (contactabilidadFiltro === "todos" || (c.contactabilidad || "").toLowerCase() === contactabilidadFiltro) &&
-      (negocioFiltro === "todos" || (c.negocio || "").toLowerCase() === negocioFiltro);
-
-    if (dist <= radio && coincide) {
-      try {
-        const icono = L.icon({
-          iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorPorPrioridad(c.prioridad)}.png`,
-          shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
-        });
-
-        const marker = L.marker([lat, lng], { icon: icono })
-          .addTo(map)
-          .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`);
-
-        html += `
-          <div class="cliente">
-            <b>${c.nombre}</b><br>
-            <p><strong>ID Deudor:</strong> ${c.id_deudor ? c.id_deudor : 'Sin ID disponible'}</p>
-            <p><strong>Dirección:</strong> ${c.direccion || ''}, ${c.distrito || ''}</p>
-            <p><strong>Prioridad:</strong> ${c.prioridad || '-'}</p>
-            <p><strong>Procesal:</strong> ${c.procesal || '-'}</p>
-            <p><strong>Contactabilidad:</strong> ${c.contactabilidad || '-'}</p>
-            <p><strong>Negocio:</strong> ${c.negocio || '-'}</p>
-            <p><strong>Asesor:</strong> ${c.asesor || '-'}</p>
-            <p><strong>Teléfono Asesor:</strong> ${c.nro_asesor || '-'}</p>
-            <button onclick="centrarEnCliente(${lat}, ${lng})">📍 Ver en el mapa</button>
-          </div>`;
-
-        contador++;
-      } catch (error) {
-        console.warn("❌ No se pudo crear marcador para:", c.nombre, error);
-      }
-    }
-  });
-
-  if (contador === 0) {
-    html += "<p>Sin resultados dentro del radio.</p>";
-  }
-
-  document.getElementById("lista-clientes").innerHTML = html;
-  dibujarCirculo(centro, radio);
-}
-
-function centrarEnCliente(lat, lng) {
-  map.setView([lat, lng], 16);
-}
-
-function dibujarCirculo(centro, radio) {
-  if (circulo) map.removeLayer(circulo);
-  circulo = L.circle(centro, {
-    radius: radio,
-    color: 'blue',
-    fillColor: '#2196F3',
-    fillOpacity: 0.2
-  }).addTo(map);
-}
-
-function iniciarMapa() {
-  navigator.geolocation.getCurrentPosition(pos => {
-    const centro = [pos.coords.latitude, pos.coords.longitude];
-    const radio = parseInt(document.getElementById("rango").value);
-    if (marcadorUsuario) map.removeLayer(marcadorUsuario);
-    marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Tú estás aquí").openPopup();
-    map.setView(centro, 14);
-    mostrarClientes(centro, radio);
-  }, () => {
-    alert("No se pudo obtener tu ubicación.");
-  });
-}
-
-function reiniciarUbicacion() {
-  iniciarMapa();
-}
-
-["rango", "estado", "prioridad", "procesal", "contactabilidad", "negocio"].forEach(id => {
-  document.getElementById(id).addEventListener("change", () => {
-    const radio = parseInt(document.getElementById("rango").value);
-    mostrarClientes(centroActual, radio);
-  });
-});
-
-map.on("click", e => {
-  const centro = [e.latlng.lat, e.latlng.lng];
-  const radio = parseInt(document.getElementById("rango").value);
-  if (marcadorUsuario) map.removeLayer(marcadorUsuario);
-  marcadorUsuario = L.marker(centro).addTo(map).bindPopup("Ubicación seleccionada").openPopup();
-  mostrarClientes(centro, radio);
-});
-
-iniciarMapa();
-</script>
-
-<!-- JS: Ocultar aviso al hacer scroll -->
-<script>
-window.addEventListener('scroll', function() {
-  const aviso = document.getElementById('aviso-scroll');
-  if (window.scrollY > 50 && aviso) {
-    aviso.style.display = 'none';
-  }
-});
-</script>
-
-</body>
-</html>
+# ===========================
+# 🚀 Ejecutar servidor local
+# ===========================
+if __name__ == '__main__':
+    app.run(debug=True)
