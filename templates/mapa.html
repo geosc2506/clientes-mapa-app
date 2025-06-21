@@ -6,14 +6,76 @@
   <title>Mapa de Clientes</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
+    html {
+      scrollbar-gutter: stable;
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
       padding: 0;
       font-family: Arial, sans-serif;
       background-color: #FFFFFF; /* Fondo blanco */
-      color: #1E2530; /* Texto azul oscuro */
+      color: #1E2530;
+      overflow-y: scroll;
+
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0,0,0,0.2) rgba(0,0,0,0.1);
     }
 
+    /* Scrollbar Webkit */
+    body::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    body::-webkit-scrollbar-thumb {
+      background-color: rgba(0,0,0,0.2);
+      border-radius: 6px;
+    }
+
+    /* Botón volver arriba */
+    #btn-volver-arriba {
+      position: fixed;
+      bottom: 20px;
+      right: 15px;
+      display: none;
+      background-color: #2563EB;
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 50px;
+      font-size: 18px;
+      cursor: pointer;
+      z-index: 9999;
+      transition: opacity 0.3s;
+    }
+
+    #btn-volver-arriba.show {
+      display: block;
+      opacity: 1;
+    }
+
+    /* Aviso desliza */
+    #aviso-scroll {
+      position: fixed;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.6);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 14px;
+      z-index: 9999;
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Mapa y filtros */
     #map {
       height: 65vh;
       margin: 10px;
@@ -22,7 +84,7 @@
 
     #filtros {
       margin: 10px;
-      background: #F0F4FA; /* Fondo gris claro */
+      background: #F0F4FA;
       border-radius: 8px;
       overflow: hidden;
     }
@@ -30,7 +92,7 @@
     #filtros summary {
       font-size: 16px;
       font-weight: bold;
-      background: #2563EB; /* Azul Waflow */
+      background: #2563EB;
       color: #fff;
       padding: 10px;
       border-radius: 6px;
@@ -110,7 +172,7 @@
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      background-color: #2563EB; /* barra azul */
+      background-color: #2563EB;
       padding: 10px 15px;
       border-radius: 6px;
       color: #fff;
@@ -133,15 +195,34 @@
       #map {
         height: 50vh;
       }
+
+      #aviso-scroll {
+        display: block;
+      }
+    }
+
+    @media (min-width: 769px) {
+      #aviso-scroll {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
+
+<!-- Aviso scroll -->
+<div id="aviso-scroll">⬇️ Desliza para ver más</div>
+
+<!-- Botón volver arriba -->
+<button id="btn-volver-arriba" onclick="window.scrollTo({ top: 0, behavior: 'smooth' });">⬆️</button>
+
+<!-- Top Bar -->
 <div class="top-bar">
   <h3>📍 Mapa de clientes</h3>
   <a href="/logout" class="logout-btn">Cerrar sesión</a>
 </div>
 
+<!-- Filtros -->
 <details id="filtros" open>
   <summary>🔍 Filtros de búsqueda</summary>
   <div class="contenedor-filtros">
@@ -198,8 +279,13 @@
   </div>
 </details>
 
+<!-- Mapa -->
 <div id="map"></div>
+
+<!-- Lista de clientes -->
 <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
+
+<!-- Carga Leaflet -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 const clientes = {{ clientes | tojson | safe }};
@@ -362,6 +448,26 @@ map.on("click", e => {
 });
 
 iniciarMapa();
+
+// --- Mostrar/Ocultar boton volver arriba y aviso scroll ---
+let scrollTimeout;
+
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('btn-volver-arriba');
+  const aviso = document.getElementById('aviso-scroll');
+
+  // Mostrar botón si scroll > 300px
+  if (window.scrollY > 300) {
+    btn.classList.add('show');
+  } else {
+    btn.classList.remove('show');
+  }
+
+  // Ocultar aviso si scroll > 100px
+  if (window.scrollY > 100 && aviso) {
+    aviso.style.display = 'none';
+  }
+});
 </script>
 </body>
 </html>
