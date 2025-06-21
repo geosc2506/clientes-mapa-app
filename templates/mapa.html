@@ -6,74 +6,12 @@
   <title>Mapa de Clientes</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    html {
-      scrollbar-gutter: stable;
-      scroll-behavior: smooth;
-    }
-
     body {
-      overflow-y: scroll;
       margin: 0;
       padding: 0;
       font-family: Arial, sans-serif;
+      background-color: #1E2530;
       color: #fff;
-      background: url("/static/images/fondo-cubos.jpg") no-repeat center center fixed;
-      background-size: cover;
-      background-color: #000;
-
-      scrollbar-width: thin;
-      scrollbar-color: rgba(255, 255, 255, 0.5) rgba(0, 0, 0, 0.2);
-    }
-
-    body::-webkit-scrollbar {
-      width: 12px;
-    }
-
-    body::-webkit-scrollbar-thumb {
-      background-color: rgba(255, 255, 255, 0.2);
-      border-radius: 6px;
-      transition: background-color 0.4s, opacity 0.4s;
-      opacity: 0;
-    }
-
-    body::-webkit-scrollbar-track {
-      background-color: rgba(0, 0, 0, 0.2);
-    }
-
-    body.mostrando-scroll::-webkit-scrollbar-thumb {
-      opacity: 1;
-      background-color: rgba(255, 255, 255, 0.5);
-    }
-
-    body.mostrando-scroll:hover::-webkit-scrollbar-thumb {
-      background-color: rgba(255, 255, 255, 0.7);
-    }
-
-    @media (max-width: 768px) {
-      body::-webkit-scrollbar {
-        width: 8px;
-      }
-    }
-
-    #btn-volver-arriba {
-      position: fixed;
-      bottom: 20px;
-      right: 15px;
-      display: none;
-      background-color: rgba(33, 150, 243, 0.8);
-      color: white;
-      border: none;
-      padding: 10px 14px;
-      border-radius: 50px;
-      font-size: 18px;
-      cursor: pointer;
-      z-index: 9999;
-      transition: opacity 0.3s;
-    }
-
-    #btn-volver-arriba.show {
-      display: block;
-      opacity: 1;
     }
 
     #map {
@@ -84,7 +22,7 @@
 
     #filtros {
       margin: 10px;
-      background: rgba(0, 0, 0, 0.4);
+      background: #222;
       border-radius: 8px;
       overflow: hidden;
     }
@@ -92,7 +30,7 @@
     #filtros summary {
       font-size: 16px;
       font-weight: bold;
-      background: #222;
+      background: #2563EB; /* azul corporativo */
       color: #fff;
       padding: 10px;
       border-radius: 6px;
@@ -114,41 +52,53 @@
 
     #filtros select,
     #filtros button {
-      padding: 3px 6px;
+      padding: 6px 8px;
       font-size: 13px;
       border-radius: 4px;
       min-height: 30px;
       width: 100%;
       box-sizing: border-box;
+      border: none;
+      background-color: #1E2530;
+      color: #fff;
     }
 
-    #filtros .botones {
-      grid-column: span 2;
-      display: flex;
-      gap: 6px;
+    #filtros button {
+      background-color: #2563EB;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    #filtros button:hover {
+      background-color: #155BB5;
     }
 
     #lista-clientes {
-      background: #111;
+      background: #222;
       padding: 15px;
       margin: 10px;
       border-radius: 8px;
     }
 
     .cliente {
-      background: #222;
+      background: #333;
       padding: 10px;
       margin-bottom: 10px;
       border-radius: 5px;
     }
 
     .cliente button {
-      background-color: #2196F3;
+      background-color: #2563EB;
       color: white;
       border: none;
       padding: 5px 10px;
       margin-top: 5px;
       cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .cliente button:hover {
+      background-color: #155BB5;
     }
 
     .top-bar {
@@ -161,58 +111,25 @@
 
     .logout-btn {
       color: white;
-      background: #e53935;
+      background: #E53935;
       padding: 6px 12px;
       border-radius: 5px;
       text-decoration: none;
       font-size: 14px;
-      margin-top: 5px;
-      margin-right: 5px;
     }
 
-    #aviso-scroll {
-      position: fixed;
-      bottom: 15px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.7);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      z-index: 9999;
-      animation: blink 1.5s infinite;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    @media (min-width: 769px) {
-      #aviso-scroll {
-        display: none;
-      }
+    .logout-btn:hover {
+      background: #C62828;
     }
 
     @media (max-width: 768px) {
       #map {
         height: 50vh;
       }
-
-      .logout-btn {
-        margin-top: 8px;
-        margin-right: 8px;
-        font-size: 15px;
-      }
     }
   </style>
 </head>
 <body>
-
-<!-- Flechita de aviso -->
-<div id="aviso-scroll">⬇️ Desliza para ver más</div>
-
 <div class="top-bar">
   <h3>📍 Mapa de clientes</h3>
   <a href="/logout" class="logout-btn">Cerrar sesión</a>
@@ -276,10 +193,6 @@
 
 <div id="map"></div>
 <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
-
-<!-- Botón "volver arriba" -->
-<button id="btn-volver-arriba" onclick="window.scrollTo({ top: 0, behavior: 'smooth' });">⬆️</button>
-
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 const clientes = {{ clientes | tojson | safe }};
@@ -403,8 +316,8 @@ function dibujarCirculo(centro, radio) {
   if (circulo) map.removeLayer(circulo);
   circulo = L.circle(centro, {
     radius: radio,
-    color: 'blue',
-    fillColor: '#2196F3',
+    color: '#2563EB',
+    fillColor: '#2563EB',
     fillOpacity: 0.2
   }).addTo(map);
 }
@@ -442,37 +355,6 @@ map.on("click", e => {
 });
 
 iniciarMapa();
-
-// Ocultar aviso-scroll al hacer scroll
-window.addEventListener('scroll', function() {
-  const aviso = document.getElementById('aviso-scroll');
-  if (window.scrollY > 50 && aviso) {
-    aviso.style.display = 'none';
-  }
-});
-
-// Scroll fade + botón volver arriba
-let scrollTimeout;
-
-function mostrarScroll() {
-  document.body.classList.add('mostrando-scroll');
-  clearTimeout(scrollTimeout);
-  scrollTimeout = setTimeout(() => {
-    document.body.classList.remove('mostrando-scroll');
-  }, 1500);
-}
-
-window.addEventListener('scroll', () => {
-  mostrarScroll();
-  const btnVolverArriba = document.getElementById('btn-volver-arriba');
-  if (window.scrollY > 300) {
-    btnVolverArriba.classList.add('show');
-  } else {
-    btnVolverArriba.classList.remove('show');
-  }
-});
-
-window.addEventListener('mousemove', mostrarScroll);
 </script>
 </body>
 </html>
