@@ -65,11 +65,29 @@
       padding: 15px;
       margin: 10px;
       border-radius: 8px;
-
+      
       /* Barra de scroll en lista */
       max-height: 30vh;
       overflow-y: auto;
     }
+
+    /* Personalizar barra de scroll */
+    #lista-clientes::-webkit-scrollbar {
+      width: 12px;
+    }
+    #lista-clientes::-webkit-scrollbar-track {
+      background: #222;
+      border-radius: 6px;
+    }
+    #lista-clientes::-webkit-scrollbar-thumb {
+      background-color: #888;
+      border-radius: 6px;
+      border: 2px solid #222;
+    }
+    #lista-clientes::-webkit-scrollbar-thumb:hover {
+      background-color: #aaa;
+    }
+
     .cliente {
       background: #222;
       padding: 10px;
@@ -100,7 +118,7 @@
       font-size: 14px;
     }
 
-    /* Responsive: en pantallas pequeñas */
+    /* Responsive */
     @media (max-width: 768px) {
       #map {
         height: 50vh;
