@@ -27,6 +27,11 @@
       text-align: center;
     }
 
+    .contenedor img {
+      width: 120px;
+      margin-bottom: 20px;
+    }
+
     h1 {
       margin-bottom: 15px;
       font-size: 24px;
@@ -74,6 +79,7 @@
 </head>
 <body>
   <div class="contenedor">
+    <img src="{{ url_for('static', filename='images/logo-geo.png') }}" alt="Logo GEO" />
     <h1>Bienvenido, {{ usuario }}!</h1>
     <p>Has iniciado sesión correctamente.</p>
     <a href="/mapa">📍 Ir al mapa de clientes</a>
