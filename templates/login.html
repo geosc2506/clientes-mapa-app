@@ -30,11 +30,22 @@
     .login-box img {
       width: 120px;
       margin-bottom: 20px;
-      transition: transform 0.6s ease-in-out;
+      animation: giro-inicial 1.2s ease-in-out 1;
     }
 
-    .login-box img:hover {
-      transform: rotate(360deg);
+    @keyframes giro-inicial {
+      0% {
+        transform: rotate(0deg) scale(0.9);
+        opacity: 0;
+      }
+      50% {
+        transform: rotate(180deg) scale(1.05);
+        opacity: 1;
+      }
+      100% {
+        transform: rotate(360deg) scale(1);
+        opacity: 1;
+      }
     }
 
     h2 {
