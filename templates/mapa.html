@@ -65,6 +65,10 @@
       padding: 15px;
       margin: 10px;
       border-radius: 8px;
+
+      /* Barra de scroll en lista */
+      max-height: 30vh;
+      overflow-y: auto;
     }
     .cliente {
       background: #222;
@@ -94,6 +98,16 @@
       border-radius: 5px;
       text-decoration: none;
       font-size: 14px;
+    }
+
+    /* Responsive: en pantallas pequeñas */
+    @media (max-width: 768px) {
+      #map {
+        height: 50vh;
+      }
+      #lista-clientes {
+        max-height: 40vh;
+      }
     }
   </style>
 </head>
