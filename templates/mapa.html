@@ -6,7 +6,12 @@
   <title>Mapa de Clientes</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
+    html {
+      scrollbar-gutter: stable;
+    }
+
     body {
+      overflow-y: scroll;
       margin: 0;
       padding: 0;
       font-family: Arial, sans-serif;
@@ -15,17 +20,20 @@
       background-size: cover;
       background-color: #000;
     }
+
     #map {
       height: 65vh;
       margin: 10px;
       border-radius: 8px;
     }
+
     #filtros {
       margin: 10px;
       background: rgba(0, 0, 0, 0.4);
       border-radius: 8px;
       overflow: hidden;
     }
+
     #filtros summary {
       font-size: 16px;
       font-weight: bold;
@@ -35,17 +43,20 @@
       border-radius: 6px;
       cursor: pointer;
     }
+
     #filtros[open] .contenedor-filtros {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 6px;
       padding: 10px;
     }
+
     #filtros label {
       font-size: 12px;
       margin-bottom: 2px;
       display: block;
     }
+
     #filtros select,
     #filtros button {
       padding: 3px 6px;
@@ -55,6 +66,7 @@
       width: 100%;
       box-sizing: border-box;
     }
+
     #filtros .botones {
       grid-column: span 2;
       display: flex;
@@ -66,26 +78,6 @@
       padding: 15px;
       margin: 10px;
       border-radius: 8px;
-
-      /* Barra de scroll en todos los tamaños */
-      max-height: 30vh;
-      overflow-y: auto;
-    }
-
-    #lista-clientes::-webkit-scrollbar {
-      width: 12px;
-    }
-    #lista-clientes::-webkit-scrollbar-track {
-      background: #222;
-      border-radius: 6px;
-    }
-    #lista-clientes::-webkit-scrollbar-thumb {
-      background-color: #888;
-      border-radius: 6px;
-      border: 2px solid #222;
-    }
-    #lista-clientes::-webkit-scrollbar-thumb:hover {
-      background-color: #aaa;
     }
 
     .cliente {
@@ -94,6 +86,7 @@
       margin-bottom: 10px;
       border-radius: 5px;
     }
+
     .cliente button {
       background-color: #2196F3;
       color: white;
@@ -102,6 +95,7 @@
       margin-top: 5px;
       cursor: pointer;
     }
+
     .top-bar {
       margin: 10px;
       display: flex;
@@ -109,6 +103,7 @@
       align-items: center;
       flex-wrap: wrap;
     }
+
     .logout-btn {
       color: white;
       background: #e53935;
@@ -116,21 +111,53 @@
       border-radius: 5px;
       text-decoration: none;
       font-size: 14px;
+      margin-top: 5px;
+      margin-right: 5px;
     }
 
-    /* Responsive: en móvil → lista más alta, con scroll */
+    /* Aviso "desliza para ver más" */
+    #aviso-scroll {
+      position: fixed;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      z-index: 9999;
+      animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    @media (min-width: 769px) {
+      #aviso-scroll {
+        display: none;
+      }
+    }
+
     @media (max-width: 768px) {
       #map {
         height: 50vh;
       }
-      #lista-clientes {
-        max-height: 40vh;
-        overflow-y: auto;
+
+      .logout-btn {
+        margin-top: 8px;
+        margin-right: 8px;
+        font-size: 15px;
       }
     }
   </style>
 </head>
 <body>
+
+<!-- Flechita de aviso -->
+<div id="aviso-scroll">⬇️ Desliza para ver más</div>
 
 <div class="top-bar">
   <h3>📍 Mapa de clientes</h3>
@@ -358,6 +385,16 @@ map.on("click", e => {
 });
 
 iniciarMapa();
+</script>
+
+<!-- JS: Ocultar aviso al hacer scroll -->
+<script>
+window.addEventListener('scroll', function() {
+  const aviso = document.getElementById('aviso-scroll');
+  if (window.scrollY > 50 && aviso) {
+    aviso.style.display = 'none';
+  }
+});
 </script>
 
 </body>
