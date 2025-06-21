@@ -13,7 +13,7 @@
       justify-content: center;
       align-items: center;
       font-family: Arial, sans-serif;
-      background-color: #FFFFFF; /* fondo blanco */
+      background-color: #FFFFFF;
     }
 
     .login-box {
@@ -30,12 +30,17 @@
     .login-box img {
       width: 120px;
       margin-bottom: 20px;
+      transition: transform 0.6s ease-in-out;
+    }
+
+    .login-box img:hover {
+      transform: rotate(360deg);
     }
 
     h2 {
       margin-bottom: 20px;
       font-size: 22px;
-      color: #2563EB; /* azul Waflow */
+      color: #2563EB;
     }
 
     label {
