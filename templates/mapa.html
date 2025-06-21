@@ -60,18 +60,18 @@
       display: flex;
       gap: 6px;
     }
+
     #lista-clientes {
       background: #111;
       padding: 15px;
       margin: 10px;
       border-radius: 8px;
 
-      /* Barra de scroll en desktop */
+      /* Barra de scroll en todos los tamaños */
       max-height: 30vh;
       overflow-y: auto;
     }
 
-    /* Personalizar barra de scroll */
     #lista-clientes::-webkit-scrollbar {
       width: 12px;
     }
@@ -118,14 +118,14 @@
       font-size: 14px;
     }
 
-    /* Responsive: móvil → scroll en body */
+    /* Responsive: en móvil → lista más alta, con scroll */
     @media (max-width: 768px) {
       #map {
         height: 50vh;
       }
       #lista-clientes {
-        max-height: none;
-        overflow-y: visible;
+        max-height: 40vh;
+        overflow-y: auto;
       }
     }
   </style>
