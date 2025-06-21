@@ -167,8 +167,56 @@
 <details id="filtros" open>
   <summary>🔍 Filtros de búsqueda</summary>
   <div class="contenedor-filtros">
-    <!-- Tus filtros aquí (idéntico a como ya lo tienes) -->
-    <!-- ... -->
+    <label>Radio:</label>
+    <select id="rango">
+      <option value="500">500 metros</option>
+      <option value="1000">1 kilómetro</option>
+      <option value="2000">2 kilómetros</option>
+    </select>
+
+    <label>Estado:</label>
+    <select id="estado">
+      <option value="todos">Todos</option>
+      <option value="activo">Activo</option>
+      <option value="no activo">No activo</option>
+    </select>
+
+    <label>Prioridad:</label>
+    <select id="prioridad">
+      <option value="todos">Todos</option>
+      {% for p in prioridades %}
+      <option value="{{ p }}">{{ p }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Procesal:</label>
+    <select id="procesal">
+      <option value="todos">Todos</option>
+      {% for p in procesales %}
+      <option value="{{ p }}">{{ p }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Contactabilidad:</label>
+    <select id="contactabilidad">
+      <option value="todos">Todos</option>
+      {% for c in contactabilidades %}
+      <option value="{{ c }}">{{ c }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Negocio:</label>
+    <select id="negocio">
+      <option value="todos">Todos</option>
+      {% for n in negocios %}
+      <option value="{{ n }}">{{ n }}</option>
+      {% endfor %}
+    </select>
+
+    <div class="botones">
+      <button onclick="reiniciarUbicacion()">📍 Mi ubicación</button>
+      <button onclick="limpiar()">🧹 Limpiar</button>
+    </div>
   </div>
 </details>
 
