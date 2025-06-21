@@ -2,48 +2,53 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mapa de Clientes</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    html {
-      scrollbar-gutter: stable;
+    :root {
+      --color-primario: #2563EB; /* azul Waflow */
+      --color-secundario: #155BB5;
+      --color-fondo: #FFFFFF;
+      --color-texto: #1E2530;
+      --color-borde: #E0E6ED;
+      --color-card: #F9FAFB;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: var(--color-fondo);
+      color: var(--color-texto);
       scroll-behavior: smooth;
     }
 
     body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background-color: #FFFFFF; /* Fondo blanco */
-      color: #1E2530;
-      overflow-y: scroll;
-
-      scrollbar-width: thin;
-      scrollbar-color: rgba(0,0,0,0.2) rgba(0,0,0,0.1);
+      overflow-y: auto;
     }
 
-    /* Scrollbar Webkit */
+    /* --- Scroll --- */
     body::-webkit-scrollbar {
-      width: 12px;
+      width: 10px;
     }
 
     body::-webkit-scrollbar-thumb {
       background-color: rgba(0,0,0,0.2);
-      border-radius: 6px;
+      border-radius: 5px;
     }
 
-    /* Botón volver arriba */
+    /* --- Botón volver arriba --- */
     #btn-volver-arriba {
       position: fixed;
       bottom: 20px;
       right: 15px;
       display: none;
-      background-color: #2563EB;
+      background-color: var(--color-primario);
       color: white;
       border: none;
-      padding: 10px 14px;
-      border-radius: 50px;
+      padding: 10px 12px;
+      border-radius: 50%;
       font-size: 18px;
       cursor: pointer;
       z-index: 9999;
@@ -55,17 +60,17 @@
       opacity: 1;
     }
 
-    /* Aviso desliza */
+    /* --- Aviso scroll --- */
     #aviso-scroll {
       position: fixed;
-      bottom: 15px;
+      bottom: 60px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0,0,0,0.6);
+      background: rgba(0, 0, 0, 0.6);
       color: white;
       padding: 6px 14px;
       border-radius: 20px;
-      font-size: 14px;
+      font-size: 13px;
       z-index: 9999;
       animation: blink 1.5s infinite;
     }
@@ -75,129 +80,145 @@
       50% { opacity: 0.5; }
     }
 
-    /* Mapa y filtros */
-    #map {
-      height: 65vh;
-      margin: 10px;
-      border-radius: 8px;
-    }
-
-    #filtros {
-      margin: 10px;
-      background: #F0F4FA;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    #filtros summary {
-      font-size: 16px;
-      font-weight: bold;
-      background: #2563EB;
-      color: #fff;
-      padding: 10px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    #filtros[open] .contenedor-filtros {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 6px;
-      padding: 10px;
-    }
-
-    #filtros label {
-      font-size: 12px;
-      margin-bottom: 2px;
-      display: block;
-    }
-
-    #filtros select,
-    #filtros button {
-      padding: 6px 8px;
-      font-size: 13px;
-      border-radius: 4px;
-      min-height: 30px;
-      width: 100%;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      background-color: #fff;
-      color: #1E2530;
-    }
-
-    #filtros button {
-      background-color: #2563EB;
-      color: #fff;
-      cursor: pointer;
-    }
-
-    #filtros button:hover {
-      background-color: #155BB5;
-    }
-
-    #lista-clientes {
-      background: #F9FAFB;
-      padding: 15px;
-      margin: 10px;
-      border-radius: 8px;
-      border: 1px solid #E0E6ED;
-    }
-
-    .cliente {
-      background: #FFFFFF;
-      border: 1px solid #E0E6ED;
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 5px;
-      color: #1E2530;
-    }
-
-    .cliente button {
-      background-color: #2563EB;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-top: 5px;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-
-    .cliente button:hover {
-      background-color: #155BB5;
-    }
-
+    /* --- Top bar --- */
     .top-bar {
-      margin: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      background-color: var(--color-primario);
+      color: #fff;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      background-color: #2563EB;
-      padding: 10px 15px;
-      border-radius: 6px;
-      color: #fff;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--color-secundario);
+    }
+
+    .top-bar h3 {
+      font-size: 16px;
+      margin: 0;
     }
 
     .logout-btn {
-      color: white;
       background: #E53935;
+      color: white;
       padding: 6px 12px;
-      border-radius: 5px;
-      text-decoration: none;
+      border-radius: 4px;
       font-size: 14px;
+      text-decoration: none;
     }
 
     .logout-btn:hover {
       background: #C62828;
     }
 
+    /* --- Mapa --- */
+    #map {
+      height: 65vh;
+      margin: 10px;
+      border-radius: 8px;
+    }
+
+    /* --- Filtros --- */
+    #filtros {
+      margin: 10px;
+      background: var(--color-card);
+      border: 1px solid var(--color-borde);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    #filtros summary {
+      font-size: 15px;
+      font-weight: bold;
+      background: var(--color-primario);
+      color: #fff;
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    #filtros[open] .contenedor-filtros {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding: 10px;
+    }
+
+    #filtros label {
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    #filtros select,
+    #filtros button {
+      padding: 8px 10px;
+      font-size: 14px;
+      border-radius: 4px;
+      border: 1px solid var(--color-borde);
+      background-color: #fff;
+      color: var(--color-texto);
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    #filtros button {
+      background-color: var(--color-primario);
+      color: white;
+      cursor: pointer;
+    }
+
+    #filtros button:hover {
+      background-color: var(--color-secundario);
+    }
+
+    /* --- Lista de clientes --- */
+    #lista-clientes {
+      background: var(--color-card);
+      border: 1px solid var(--color-borde);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 10px;
+    }
+
+    .cliente {
+      background: white;
+      border: 1px solid var(--color-borde);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .cliente button {
+      margin-top: 5px;
+      background-color: var(--color-primario);
+      color: white;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .cliente button:hover {
+      background-color: var(--color-secundario);
+    }
+
+    /* --- Mobile adjustments --- */
     @media (max-width: 768px) {
       #map {
-        height: 50vh;
+        height: 55vh;
       }
 
-      #aviso-scroll {
-        display: block;
+      #filtros[open] .contenedor-filtros {
+        grid-template-columns: 1fr;
+      }
+
+      .top-bar h3 {
+        font-size: 14px;
+      }
+
+      .logout-btn {
+        font-size: 13px;
       }
     }
 
@@ -284,7 +305,6 @@
 
 <!-- Lista de clientes -->
 <div id="lista-clientes"><strong>Clientes cercanos:</strong></div>
-
 <!-- Carga Leaflet -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
