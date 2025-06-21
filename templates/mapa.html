@@ -65,8 +65,8 @@
       padding: 15px;
       margin: 10px;
       border-radius: 8px;
-      
-      /* Barra de scroll en lista */
+
+      /* Barra de scroll en desktop */
       max-height: 30vh;
       overflow-y: auto;
     }
@@ -118,13 +118,14 @@
       font-size: 14px;
     }
 
-    /* Responsive */
+    /* Responsive: móvil → scroll en body */
     @media (max-width: 768px) {
       #map {
         height: 50vh;
       }
       #lista-clientes {
-        max-height: 40vh;
+        max-height: none;
+        overflow-y: visible;
       }
     }
   </style>
