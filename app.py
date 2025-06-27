@@ -4,7 +4,16 @@ import requests
 from io import StringIO
 
 app = Flask(__name__)
-app.secret_key = 'secreto123'  # Cambiar en producción
+app.secret_key = 'secreto123'  # Cambia esto en producción
+
+# ====================================
+# 🔐 Múltiples usuarios permitidos
+# ====================================
+USUARIOS = {
+    'geo': 'akira',
+    'campo': '1234',
+    'admin': 'adminpass'
+}
 
 # ====================================
 # 🔄 Función para obtener clientes CSV
@@ -17,7 +26,7 @@ def obtener_clientes():
 
         df = pd.read_csv(StringIO(response.text))
 
-        # Normalizar nombres de columnas: strip, espacios a guiones bajos, minúsculas
+        # Normalizar nombres de columnas
         df.rename(columns=lambda x: x.strip().replace(" ", "_").lower(), inplace=True)
 
         columnas = ['nombre', 'direccion', 'latitud', 'longitud', 'distrito', 'telefono',
@@ -44,9 +53,6 @@ def obtener_clientes():
 # ==============================
 # 🔐 Sistema de autenticación
 # ==============================
-USUARIO = 'geo'
-CLAVE = 'akira'
-
 @app.route('/')
 def index():
     if 'usuario' in session:
@@ -58,7 +64,7 @@ def login():
     if request.method == 'POST':
         usuario = request.form['usuario']
         clave = request.form['clave']
-        if usuario == USUARIO and clave == CLAVE:
+        if usuario in USUARIOS and clave == USUARIOS[usuario]:
             session['usuario'] = usuario
             return redirect('/dashboard')
         return 'Credenciales incorrectas'
