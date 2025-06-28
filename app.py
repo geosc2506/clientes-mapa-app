@@ -2,6 +2,11 @@ from flask import Flask, render_template, request, redirect, session, jsonify
 import pandas as pd
 import requests
 from io import StringIO
+import os
+import json
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'secreto123'  # Cambia esto en producción
@@ -112,6 +117,32 @@ def mapa():
 def debug_clientes():
     clientes = obtener_clientes()
     return jsonify(clientes)
+
+# =============================================
+# 📤 Ruta para guardar ubicación en Google Sheet
+# =============================================
+@app.route('/guardar-ubicacion', methods=['POST'])
+def guardar_ubicacion():
+    data = request.get_json()
+    lat = data.get("latitud")
+    lng = data.get("longitud")
+    user = session.get("usuario", "anónimo")
+    fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    try:
+        with open("credenciales.json") as f:
+            credenciales = json.load(f)
+        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(credenciales, scope)
+        client = gspread.authorize(creds)
+
+        sheet = client.open_by_key("1Y1Vw_-ij3-hWYam1nG8R30uhbX6PNUyvcdoUQN9WfE0").sheet1
+        sheet.append_row([fecha, user, lat, lng])
+
+        return jsonify({"ok": True})
+    except Exception as e:
+        print("❌ Error al guardar ubicación:", e)
+        return jsonify({"error": "No se pudo guardar"}), 500
 
 # ===========================
 # 🚀 Ejecutar servidor local
