@@ -64,6 +64,7 @@
     }
 
     @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
     .top-bar {
       position: sticky;
       top: 0;
@@ -101,7 +102,6 @@
       border: 1px solid var(--color-borde);
       border-radius: 8px;
     }
-
     #filtros summary {
       font-size: 15px;
       font-weight: bold;
@@ -321,7 +321,7 @@ function mostrarClientes(centro, radio) {
 
     if (dist <= radio && coincide) {
       const icono = L.icon({
-        iconUrl: https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorPorPrioridad(c.prioridad)}.png,
+        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colorPorPrioridad(c.prioridad)}.png`,
         shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
         iconSize: [25, 41],
         iconAnchor: [12, 41],
@@ -331,9 +331,9 @@ function mostrarClientes(centro, radio) {
 
       L.marker([lat, lng], { icon: icono })
         .addTo(map)
-        .bindPopup(<b>${c.nombre}</b><br>${c.direccion || ''});
+        .bindPopup(`<b>${c.nombre}</b><br>${c.direccion || ''}`);
 
-      html += 
+      html += `
         <div class="cliente">
           <b>${c.nombre}</b><br>
           <p><strong>ID Deudor:</strong> ${c.id_deudor || '-'}</p>
@@ -345,7 +345,7 @@ function mostrarClientes(centro, radio) {
           <p><strong>Asesor:</strong> ${c.asesor || '-'}</p>
           <p><strong>Teléfono Asesor:</strong> ${c.nro_asesor || '-'}</p>
           <button onclick="centrarEnCliente(${lat}, ${lng})">📍 Ver en el mapa</button>
-        </div>;
+        </div>`;
       contador++;
     }
   });
@@ -354,6 +354,7 @@ function mostrarClientes(centro, radio) {
   document.getElementById("lista-clientes").innerHTML = html;
   dibujarCirculo(centro, radio);
 }
+
 function centrarEnCliente(lat, lng) {
   map.setView([lat, lng], 16);
 }
@@ -378,14 +379,12 @@ function iniciarMapa() {
     map.setView(centro, 14);
     mostrarClientes(centro, radio);
 
-    // Guardar ubicación en Google Sheets
     fetch('/guardar-ubicacion', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ latitud: centro[0], longitud: centro[1] })
     }).then(res => console.log("📤 Ubicación enviada", res.status))
       .catch(err => console.error("❌ Error al enviar ubicación", err));
-
   }, () => {
     alert("No se pudo obtener tu ubicación.");
   });
@@ -412,7 +411,6 @@ map.on("click", e => {
 
 iniciarMapa();
 
-// Botón volver arriba y control scroll
 window.addEventListener('scroll', () => {
   const btn = document.getElementById('btn-volver-arriba');
   const aviso = document.getElementById('aviso-scroll');
